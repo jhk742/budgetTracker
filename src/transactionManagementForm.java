@@ -1,19 +1,30 @@
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.xml.transform.Result;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 public class transactionManagementForm extends JDialog {
     private JPanel transactionManagementForm;
-    private JTextField textField1;
-    private JTextField textField2;
-    private JComboBox comboBox1;
-    private JComboBox comboBox2;
-    private JTextField textField3;
-    private JComboBox comboBox3;
-    private JTextField textField4;
+    private JTextField txtDescription;
+    private JTextField txtAmount;
+    private JComboBox comboBoxCategory;
+    private JComboBox comboBoxType;
+    private JTextField txtRunningBalance;
+    private JComboBox comboBoxPaymentMethod;
+    private JTextField txtLocation;
     private JButton btnSubmit;
     private JButton btnBack;
     private JButton btnReset;
@@ -29,6 +40,134 @@ public class transactionManagementForm extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getLoggedUserTotalBalance(loggedU);
 
+        //upon opening form
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                getLoggedUserTotalBalance(loggedU);
+                // fill type combobox with three options (default: blank / income / expense)
+                comboBoxType.addItem("");
+                comboBoxType.addItem("Income");
+                comboBoxType.addItem("Expense");
+                comboBoxPaymentMethod.addItem("");
+                comboBoxPaymentMethod.addItem("Card");
+                comboBoxPaymentMethod.addItem("Cash");
+                txtDescription.setEnabled(false);
+                txtAmount.setEnabled(false);
+                comboBoxCategory.setEnabled(false);
+                txtRunningBalance.setEnabled(false);
+                comboBoxPaymentMethod.setEnabled(false);
+                txtLocation.setEnabled(false);
+            }
+        });
+
+
+        comboBoxType.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ArrayList<JComponent> comps = new ArrayList<>();
+                comps.add(comboBoxCategory);
+                comps.add(comboBoxPaymentMethod);
+                comps.add(txtLocation);
+                String selectedOption = (String) comboBoxType.getSelectedItem();
+                txtDescription.setEnabled(true);
+                txtAmount.setEnabled(true);
+                if (selectedOption.equals("Expense")) {
+                    toggleFields("Expense", comps);
+                    comboBoxCategory.addItem("");
+                    try {
+                        Connection con = ConnectionProvider.getCon();
+                        Statement st = con.createStatement();
+                        ResultSet rs = st.executeQuery("select name from categories");
+                        while (rs.next()) {
+                            comboBoxCategory.addItem(rs.getString("name"));
+                        }
+                    } catch (Exception er) {
+                        JOptionPane.showMessageDialog(null, "Failed to retrieve category names.");
+                    }
+                }
+                if (selectedOption.equals("Income")) {
+                    toggleFields("Income", comps);
+                }
+            }
+        });
+        btnSubmit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String option = String.valueOf(comboBoxType.getSelectedItem());
+                boolean validationStatus = authenticateFields(option);
+                String description = txtDescription.getText();
+                BigDecimal amount = new BigDecimal(txtAmount.getText());
+                LocalDate currentDate = LocalDate.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                String formattedDate = currentDate.format(formatter);
+                if(validationStatus) {
+                    if (option.equals("Expense")) {
+                        // first retrieve the category id
+                        int categoryId = getCategoryIdByName(comboBoxCategory);
+                        String runningBalance = txtRunningBalance.getText();
+                        String type = String.valueOf(comboBoxType.getSelectedItem());
+                        String paymentMethod = String.valueOf(comboBoxPaymentMethod.getSelectedItem());
+                        String location = txtLocation.getText();
+                        // insert into transactions table
+                        try {
+                            Connection con = ConnectionProvider.getCon();
+                            PreparedStatement ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, category_id, " +
+                                    "type, account_id, running_balance, payment_method, location) " +
+                                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            ps.setString(1, formattedDate);
+                            ps.setString(2, description);
+                            ps.setBigDecimal(3, amount);
+                            ps.setInt(4, categoryId);
+                            ps.setString(5, type);
+                            ps.setInt(6, Integer.parseInt(loggedU.id));
+                            ps.setBigDecimal(7, new BigDecimal(runningBalance));
+                            ps.setString(8, paymentMethod);
+                            ps.setString(9, location);
+                            int rowsAffectedTransaction = ps.executeUpdate();
+                            if (rowsAffectedTransaction > 0) {
+                                try {
+                                    PreparedStatement psBankAccounts = con.prepareStatement("update bank_accounts set account_balance = account_balance - ? WHERE user_id = ?");
+                                    psBankAccounts.setBigDecimal(1, amount);
+                                    psBankAccounts.setInt(2, Integer.parseInt(loggedU.id));
+                                    int rowsAffectedBankAccount = psBankAccounts.executeUpdate();
+                                    if (rowsAffectedBankAccount > 0) {
+                                        JOptionPane.showMessageDialog(null, "Transaction created successfully!");
+                                    }
+                                } catch (Exception er2) {
+                                    JOptionPane.showMessageDialog(null, "Error while trying to update user's Bank Account information.");
+                                }
+                            }
+                            //update bank_accounts table
+                        } catch (Exception er) {
+                            JOptionPane.showMessageDialog(null, "Error trying to create transaction.");
+                        }
+
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "All fields are required.");
+                }
+            }
+        });
+        txtAmount.getDocument().addDocumentListener(new DocumentListener() {
+            //to update the running balance txtfield when a input is provided for amount
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                BigDecimal amount = new BigDecimal(txtAmount.getText());
+                if(String.valueOf(comboBoxType.getSelectedItem()).equals("Income")) {
+                    txtRunningBalance.setText(String.valueOf(loggedU.totalBalance.add(amount)));
+                }
+                if (String.valueOf(comboBoxType.getSelectedItem()).equals("Expense")) {
+                    txtRunningBalance.setText(String.valueOf(loggedU.totalBalance.subtract(amount)));
+                }
+            }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+            }
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+            }
+        });
     }
 
     public void getLoggedUserTotalBalance(loggedUser loggedU) {
@@ -45,5 +184,43 @@ public class transactionManagementForm extends JDialog {
         } catch (Exception er) {
             System.out.println(er);
         }
+    }
+
+    public void toggleFields(String option, ArrayList<JComponent> comps) {
+        for (JComponent comp : comps) {
+            comp.setEnabled(option.equals("Income") ? false : true);
+        }
+    }
+
+    public boolean authenticateFields(String option) {
+        if (!txtDescription.getText().equals("") && !txtAmount.getText().equals("") && !txtRunningBalance.getText().equals("")) {
+            if (option.equals("Income")) {
+                return true;
+            }
+            if (option.equals("Expense")) {
+                if (!comboBoxCategory.getSelectedItem().equals("") && !comboBoxPaymentMethod.getSelectedItem().equals("") && !txtLocation.getText().equals("")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static int getCategoryIdByName(JComboBox comboBox) {
+        String categoryName = String.valueOf(comboBox.getSelectedItem());
+        try {
+            Connection con = ConnectionProvider.getCon();
+            PreparedStatement ps = con.prepareStatement("select category_id from categories where name=?");
+            ps.setString(1, categoryName);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int id = rs.getInt("category_id");
+                return id;
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "That category does not exist.");
+            System.out.println(e);
+        }
+        return -1;
     }
 }
