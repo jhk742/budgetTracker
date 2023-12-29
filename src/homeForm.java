@@ -11,6 +11,7 @@ public class homeForm extends JDialog {
     private JButton btnAccountBalance;
     private JButton btnQuit;
     private JLabel txtUserName;
+    private JButton btnCategories;
 
     public homeForm(JFrame parent, loggedUser loggedU) {
         super(parent);
@@ -53,6 +54,21 @@ public class homeForm extends JDialog {
                 accountBalanceForm.setVisible(true);
             }
         });
+        btnTransactionManagement.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                transactionManagementForm tmf = new transactionManagementForm(null, loggedU);
+                tmf.setVisible(true);
+            }
+        });
+        btnCategories.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                categoriesForm cf = new categoriesForm(null, loggedU);
+                cf.setVisible(true);
+            }
+        });
     }
-
 }
