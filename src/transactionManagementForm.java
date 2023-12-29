@@ -158,13 +158,7 @@ public class transactionManagementForm extends JDialog {
                     }
                     //update to show new balance and reset all other fields to default (blanks)
                     getLoggedUserTotalBalance(loggedU);
-                    comboBoxType.setSelectedIndex(0);
-                    txtDescription.setText("");
-                    txtAmount.setText("");
-                    comboBoxCategory.setSelectedIndex(0);
-                    txtRunningBalance.setText("");
-                    comboBoxPaymentMethod.setSelectedIndex(0);
-                    txtLocation.setText("");
+                    resetFields();
                 } else {
                     JOptionPane.showMessageDialog(null, "All fields are required.");
                 }
@@ -187,6 +181,20 @@ public class transactionManagementForm extends JDialog {
             }
             @Override
             public void changedUpdate(DocumentEvent e) {
+            }
+        });
+        btnReset.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resetFields();
+            }
+        });
+        btnBack.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+                homeForm hf = new homeForm(null, loggedU);
+                hf.setVisible(true);
             }
         });
     }
@@ -261,5 +269,15 @@ public class transactionManagementForm extends JDialog {
         } catch (Exception er2) {
             JOptionPane.showMessageDialog(null, "Error while trying to update user's Bank Account information.");
         }
+    }
+
+    public void resetFields() {
+        comboBoxType.setSelectedIndex(0);
+        txtDescription.setText("");
+        txtAmount.setText("");
+        comboBoxCategory.setSelectedIndex(0);
+        txtRunningBalance.setText("");
+        comboBoxPaymentMethod.setSelectedIndex(0);
+        txtLocation.setText("");
     }
 }

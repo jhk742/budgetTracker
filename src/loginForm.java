@@ -63,6 +63,7 @@ public class loginForm extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 dispose();
+                System.exit(0);
             }
         });
         setVisible(true);
