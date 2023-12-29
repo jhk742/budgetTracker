@@ -33,12 +33,10 @@ public class AccountBalanceForm extends JDialog {
             @Override
             public void windowOpened(WindowEvent e) {
                 getLoggedUserTotalBalance(loggedU);
-                getLoggedUserTotalIncome(loggedU);
-                getLoggedUserTotalExpense(loggedU);
+                getLoggedUserTotalIncomeAndExpense(loggedU);
                 lblUserName.setText(loggedU.name);
             }
         });
-
     }
     public void getLoggedUserTotalBalance(loggedUser loggedU) {
         try {
@@ -56,32 +54,22 @@ public class AccountBalanceForm extends JDialog {
         }
     }
 
-    public void getLoggedUserTotalIncome(loggedUser loggedU) {
+    public void getLoggedUserTotalIncomeAndExpense(loggedUser loggedU) {
         try {
             Connection con = ConnectionProvider.getCon();
-            PreparedStatement ps = con.prepareStatement("SELECT SUM(amount) AS total_income FROM transactions WHERE account_id = ? AND type = 'Income'");
+            PreparedStatement ps = con.prepareStatement("SELECT SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) AS total_income, " +
+                    "SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) AS total_expense " +
+                    "FROM transactions WHERE account_id = ?");
             ps.setString(1, loggedU.id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 BigDecimal totalIncome = rs.getBigDecimal("total_income");
+                BigDecimal totalExpense = rs.getBigDecimal("total_expense");
                 loggedU.totalIncome = totalIncome;
-                lblTotalIncome.setText("$" + loggedU.totalIncome);
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    public void getLoggedUserTotalExpense(loggedUser loggedU) {
-        try {
-            Connection con = ConnectionProvider.getCon();
-            PreparedStatement ps = con.prepareStatement("SELECT SUM(amount) AS total_income FROM transactions WHERE account_id = ? AND type = 'Expense'");
-            ps.setString(1, loggedU.id);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                BigDecimal totalExpense = rs.getBigDecimal("total_income");
                 loggedU.totalExpense = totalExpense;
+                lblTotalIncome.setText("$" + loggedU.totalIncome);
                 lblTotalExpenses.setText("$" + loggedU.totalExpense);
+
             }
         } catch (Exception e) {
             throw new IllegalStateException(e);
