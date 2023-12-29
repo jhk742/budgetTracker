@@ -8,6 +8,7 @@ public class loggedUser {
     public String address;
     public String password;
     public int status;
-
     public BigDecimal totalBalance;
+    public BigDecimal totalIncome;
+    public BigDecimal totalExpense;
 }

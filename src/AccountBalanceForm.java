@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,9 +11,11 @@ public class AccountBalanceForm extends JDialog {
     private JPanel accountBalanceForm;
     private JLabel lblUserName;
     private JTable tableTransactionHistory;
-    private JTextField txtTotalBalance;
     private JTextField txtTotalIncome;
     private JTextField txtTotalExpenses;
+    private JLabel lblTotalBalance;
+    private JLabel lblTotalIncome;
+    private JLabel lblTotalExpenses;
 
 
     public AccountBalanceForm(JFrame parent, loggedUser loggedU) {
@@ -24,22 +28,63 @@ public class AccountBalanceForm extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         lblUserName.setText(loggedU.name);
-        txtTotalBalance.setEditable(false);
-        txtTotalIncome.setEditable(false);
-        txtTotalExpenses.setEditable(false);
 
-        //temporary implementation to display total account balance
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                getLoggedUserTotalBalance(loggedU);
+                getLoggedUserTotalIncome(loggedU);
+                getLoggedUserTotalExpense(loggedU);
+                lblUserName.setText(loggedU.name);
+            }
+        });
+
+    }
+    public void getLoggedUserTotalBalance(loggedUser loggedU) {
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("select * from bank_accounts where user_id=?");
             ps.setString(1, loggedU.id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                BigDecimal balance = rs.getBigDecimal("account_balance");
-                txtTotalBalance.setText(String.valueOf(balance));
+                BigDecimal totalBalance = rs.getBigDecimal("account_balance");
+                loggedU.totalBalance = totalBalance;
+                lblTotalBalance.setText("$" + loggedU.totalBalance);
             }
         } catch (Exception er) {
             System.out.println(er);
+        }
+    }
+
+    public void getLoggedUserTotalIncome(loggedUser loggedU) {
+        try {
+            Connection con = ConnectionProvider.getCon();
+            PreparedStatement ps = con.prepareStatement("SELECT SUM(amount) AS total_income FROM transactions WHERE account_id = ? AND type = 'Income'");
+            ps.setString(1, loggedU.id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                BigDecimal totalIncome = rs.getBigDecimal("total_income");
+                loggedU.totalIncome = totalIncome;
+                lblTotalIncome.setText("$" + loggedU.totalIncome);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public void getLoggedUserTotalExpense(loggedUser loggedU) {
+        try {
+            Connection con = ConnectionProvider.getCon();
+            PreparedStatement ps = con.prepareStatement("SELECT SUM(amount) AS total_income FROM transactions WHERE account_id = ? AND type = 'Expense'");
+            ps.setString(1, loggedU.id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                BigDecimal totalExpense = rs.getBigDecimal("total_income");
+                loggedU.totalExpense = totalExpense;
+                lblTotalExpenses.setText("$" + loggedU.totalExpense);
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
     }
 }
