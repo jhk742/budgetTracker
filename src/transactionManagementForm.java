@@ -74,6 +74,8 @@ public class transactionManagementForm extends JDialog {
                 txtAmount.setEnabled(true);
                 if (selectedOption.equals("Expense")) {
                     toggleFields("Expense", comps);
+                    //so that everytime the type is changed, redundant values aren't added to the combobox
+                    comboBoxCategory.removeAllItems();
                     comboBoxCategory.addItem("");
                     try {
                         Connection con = ConnectionProvider.getCon();
@@ -98,6 +100,8 @@ public class transactionManagementForm extends JDialog {
                 boolean validationStatus = authenticateFields(option);
                 String description = txtDescription.getText();
                 BigDecimal amount = new BigDecimal(txtAmount.getText());
+                String runningBalance = txtRunningBalance.getText();
+                String type = String.valueOf(comboBoxType.getSelectedItem());
                 LocalDate currentDate = LocalDate.now();
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                 String formattedDate = currentDate.format(formatter);
@@ -105,8 +109,6 @@ public class transactionManagementForm extends JDialog {
                     if (option.equals("Expense")) {
                         // first retrieve the category id
                         int categoryId = getCategoryIdByName(comboBoxCategory);
-                        String runningBalance = txtRunningBalance.getText();
-                        String type = String.valueOf(comboBoxType.getSelectedItem());
                         String paymentMethod = String.valueOf(comboBoxPaymentMethod.getSelectedItem());
                         String location = txtLocation.getText();
                         // insert into transactions table
@@ -126,17 +128,7 @@ public class transactionManagementForm extends JDialog {
                             ps.setString(9, location);
                             int rowsAffectedTransaction = ps.executeUpdate();
                             if (rowsAffectedTransaction > 0) {
-                                try {
-                                    PreparedStatement psBankAccounts = con.prepareStatement("update bank_accounts set account_balance = account_balance - ? WHERE user_id = ?");
-                                    psBankAccounts.setBigDecimal(1, amount);
-                                    psBankAccounts.setInt(2, Integer.parseInt(loggedU.id));
-                                    int rowsAffectedBankAccount = psBankAccounts.executeUpdate();
-                                    if (rowsAffectedBankAccount > 0) {
-                                        JOptionPane.showMessageDialog(null, "Transaction created successfully!");
-                                    }
-                                } catch (Exception er2) {
-                                    JOptionPane.showMessageDialog(null, "Error while trying to update user's Bank Account information.");
-                                }
+                                updateBankAccount("Expense", loggedU, amount);
                             }
                             //update bank_accounts table
                         } catch (Exception er) {
@@ -144,6 +136,35 @@ public class transactionManagementForm extends JDialog {
                         }
 
                     }
+                    if (option.equals("Income")) {
+                        try {
+                            Connection con = ConnectionProvider.getCon();
+                            PreparedStatement ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, " +
+                                    "type, account_id, running_balance) " +
+                                    "VALUES (?, ?, ?, ?, ?, ?)");
+                            ps.setString(1, formattedDate);
+                            ps.setString(2, description);
+                            ps.setBigDecimal(3, amount);
+                            ps.setString(4, type);
+                            ps.setInt(5, Integer.parseInt(loggedU.id));
+                            ps.setBigDecimal(6, new BigDecimal(runningBalance));
+                            int rowsAffectedTransaction = ps.executeUpdate();
+                            if (rowsAffectedTransaction > 0) {
+                                updateBankAccount("Income", loggedU, amount);
+                            }
+                        } catch (Exception er) {
+                            JOptionPane.showMessageDialog(null, "Error trying to create transaction.");
+                        }
+                    }
+                    //update to show new balance and reset all other fields to default (blanks)
+                    getLoggedUserTotalBalance(loggedU);
+                    comboBoxType.setSelectedIndex(0);
+                    txtDescription.setText("");
+                    txtAmount.setText("");
+                    comboBoxCategory.setSelectedIndex(0);
+                    txtRunningBalance.setText("");
+                    comboBoxPaymentMethod.setSelectedIndex(0);
+                    txtLocation.setText("");
                 } else {
                     JOptionPane.showMessageDialog(null, "All fields are required.");
                 }
@@ -222,5 +243,23 @@ public class transactionManagementForm extends JDialog {
             System.out.println(e);
         }
         return -1;
+    }
+
+    public static void updateBankAccount(String option, loggedUser loggedU, BigDecimal amount) {
+        try {
+            Connection con = ConnectionProvider.getCon();
+            String updateQuery = "update bank_accounts set account_balance = "
+                    + (option.equals("Expense") ? "account_balance - ?" : "account_balance + ?")
+                    + " WHERE user_id = ?";
+            PreparedStatement psBankAccounts = con.prepareStatement(updateQuery);
+            psBankAccounts.setBigDecimal(1, amount);
+            psBankAccounts.setInt(2, Integer.parseInt(loggedU.id));
+            int rowsAffectedBankAccount = psBankAccounts.executeUpdate();
+            if (rowsAffectedBankAccount > 0) {
+                JOptionPane.showMessageDialog(null, "Transaction created successfully!");
+            }
+        } catch (Exception er2) {
+            JOptionPane.showMessageDialog(null, "Error while trying to update user's Bank Account information.");
+        }
     }
 }
