@@ -26,7 +26,6 @@ public class loginForm extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         getRootPane().setDefaultButton(btnSubmit);
-
         btnSubmit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -69,7 +68,6 @@ public class loginForm extends JDialog {
             }
         });
         setVisible(true);
-
     }
 
     private loggedUser authenticateUser(String email, String password) {

@@ -12,6 +12,7 @@ public class homeForm extends JDialog {
     private JButton btnQuit;
     private JLabel txtUserName;
     private JButton btnCategories;
+    private JButton btnCharts;
 
     public homeForm(JFrame parent, loggedUser loggedU) {
         super(parent);
@@ -41,7 +42,7 @@ public class homeForm extends JDialog {
         btnQuit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose();
+                setVisible(false);
                 loginForm lf = new loginForm(null);
             }
         });
@@ -68,6 +69,14 @@ public class homeForm extends JDialog {
                 setVisible(false);
                 categoriesForm cf = new categoriesForm(null, loggedU);
                 cf.setVisible(true);
+            }
+        });
+        btnCharts.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                charts c = new charts(null, loggedU);
+                c.setVisible(true);
             }
         });
     }
