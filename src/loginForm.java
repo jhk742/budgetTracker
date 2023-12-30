@@ -25,6 +25,8 @@ public class loginForm extends JDialog {
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
+        getRootPane().setDefaultButton(btnSubmit);
+
         btnSubmit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
