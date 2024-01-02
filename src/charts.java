@@ -1,15 +1,13 @@
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.DateAxis;
-import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
-import org.jfree.chart.labels.XYSeriesLabelGenerator;
 import org.jfree.chart.plot.PiePlot;
-import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.data.jdbc.JDBCCategoryDataset;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,8 +15,6 @@ import java.awt.event.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class charts extends JDialog{
     private JPanel chartForm;
@@ -26,6 +22,8 @@ public class charts extends JDialog{
     private JButton btnBack;
     private JRadioButton radioBtnIncome;
     private JRadioButton radioBtnExpenses;
+    private JRadioButton radioBtnNetIncome;
+    private JRadioButton radioBtnClosingBalance;
 
     public charts(JFrame parent, loggedUser loggedU) {
         super(parent);
@@ -53,7 +51,9 @@ public class charts extends JDialog{
             @Override
             public void actionPerformed(ActionEvent e) {
                 radioBtnExpenses.setSelected(false);
-                createLineGraph();
+                radioBtnNetIncome.setSelected(false);
+                radioBtnClosingBalance.setSelected(false);
+                createLineGraph("Income");
             }
         });
 
@@ -61,7 +61,27 @@ public class charts extends JDialog{
             @Override
             public void actionPerformed(ActionEvent e) {
                 radioBtnIncome.setSelected(false);
+                radioBtnNetIncome.setSelected(false);
+                radioBtnClosingBalance.setSelected(false);
                 createPieChart();
+            }
+        });
+        radioBtnNetIncome.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                radioBtnExpenses.setSelected(false);
+                radioBtnIncome.setSelected(false);
+                radioBtnClosingBalance.setSelected(false);
+                createLineGraph("Profit/Loss");
+            }
+        });
+        radioBtnClosingBalance.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                radioBtnExpenses.setSelected(false);
+                radioBtnIncome.setSelected(false);
+                radioBtnNetIncome.setSelected(false);
+                createLineGraph("ClosingBalance");
             }
         });
     }
@@ -71,37 +91,68 @@ public class charts extends JDialog{
         JPanel radioPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         radioBtnIncome = new JRadioButton("Income");
         radioBtnExpenses = new JRadioButton("Expenses");
+        radioBtnNetIncome = new JRadioButton("Net Income");
+        radioBtnClosingBalance = new JRadioButton("Daily Closing Balance");
         btnBack = new JButton("Back");
         radioPanel.add(radioBtnIncome);
         radioPanel.add(radioBtnExpenses);
+        radioPanel.add(radioBtnNetIncome);
+        radioPanel.add(radioBtnClosingBalance);
         chartForm.add(radioPanel, BorderLayout.NORTH);
         chartForm.add(btnBack, BorderLayout.SOUTH);
         chartForm.add(chartPanel, BorderLayout.CENTER);
     }
 
-    private XYSeriesCollection createLineGraphDataSet() {
-        //create the collection to store the individual points of the line graph
-        XYSeriesCollection lineGraphDataset = new XYSeriesCollection();
-        try  {
-            // income will be displayed using a line-graph
-            Connection con = ConnectionProvider.getCon();
-            PreparedStatement ps = con.prepareStatement("SELECT date, amount FROM transactions WHERE type = 'Income'");
-            ResultSet rs = ps.executeQuery();
-            //create the series to store inside the collection
-            XYSeries series = new XYSeries("Income");
-            while (rs.next()) {
-                String date = rs.getString("date");
-                double amount = rs.getDouble("amount");
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                Date parsedDate = dateFormat.parse(date);
-                series.add(parsedDate.getTime(), amount);
+    private JDBCCategoryDataset createLineGraphDataSet(String option) {
+        if (option.equals("Income")) {
+            try  {
+                // income will be displayed using a line-graph
+                Connection con = ConnectionProvider.getCon();
+                JDBCCategoryDataset lineGraphDataSet = new JDBCCategoryDataset(con, "SELECT date, SUM(amount) AS total_amount\n" +
+                        "FROM transactions\n" +
+                        "WHERE type = 'Income'\n" +
+                        "GROUP BY date\n" +
+                        "ORDER BY date");
+                return lineGraphDataSet;
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            //add the series to the collection
-            lineGraphDataset.addSeries(series);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return lineGraphDataset;
+        if (option.equals("Profit/Loss")) {
+            try {
+                Connection con = ConnectionProvider.getCon();
+                JDBCCategoryDataset lineGraphDataSet = new JDBCCategoryDataset(con, "SELECT\n" +
+                        " DATE(date) AS date,\n" +
+                        " SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) -\n" +
+                        " SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) AS running_balance\n" +
+                        " FROM transactions\n" +
+                        " GROUP BY DATE(date)\n" +
+                        " ORDER BY DATE(date)");
+                return lineGraphDataSet;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if(option.equals("ClosingBalance")) {
+            try {
+                Connection con = ConnectionProvider.getCon();
+                JDBCCategoryDataset lineGraphDataSet = new JDBCCategoryDataset(con, "WITH RankedTransactions AS (\n" +
+                        " SELECT\n" +
+                        " *,\n" +
+                        " ROW_NUMBER() OVER (PARTITION BY date ORDER BY transaction_id DESC) AS row_num\n" +
+                        " FROM transactions\n" +
+                        " )\n" +
+                        " SELECT\n" +
+                        " date,\n" +
+                        " running_balance\n" +
+                        " FROM RankedTransactions\n" +
+                        " WHERE row_num = 1;\n");
+                return lineGraphDataSet;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
     }
     private DefaultPieDataset createPieChartDataset() {
         DefaultPieDataset dataset = new DefaultPieDataset();
@@ -134,61 +185,65 @@ public class charts extends JDialog{
                 true);
         PiePlot plot = (PiePlot) chart.getPlot();
         plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0}: ${1} ({2})"));
-//        ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new Dimension(1300, 800));
-//        chartForm.add(chartPanel, BorderLayout.CENTER);
         chartPanel.setChart(chart);
         pack();
     }
 
-    private void createLineGraph() {
-        XYSeriesCollection lineDataSet = createLineGraphDataSet();
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                "Income Line Graph",
-                "Date",
-                "Amount",
-                lineDataSet,
-                false,
-                true,
-                false
-        );
-
-        XYPlot plot = chart.getXYPlot();
-        DateAxis dateAxis = new DateAxis("Date");
-        plot.setDomainAxis(dateAxis);
-        plot.setRangeAxis(new NumberAxis("Amount"));
-        chartPanel.setChart(chart);
+    private void createLineGraph(String option) {
+        if(option.equals("Income")) {
+            CategoryDataset lineDataSet = createLineGraphDataSet(option);
+            JFreeChart chart = ChartFactory.createLineChart(
+                    "Income Line Graph",
+                    "Date",
+                    "Amount",
+                    lineDataSet,
+                    PlotOrientation.VERTICAL,
+                    false,
+                    true,
+                    true
+            );
+            LineAndShapeRenderer renderer = (LineAndShapeRenderer) chart.getCategoryPlot().getRenderer();
+            renderer.setDefaultLinesVisible(true);
+            renderer.setDefaultShapesFilled(true);
+            renderer.setDefaultShapesVisible(true);
+            chartPanel.setChart(chart);
+        }
+        if(option.equals("Profit/Loss")) {
+            CategoryDataset lineDataSet = createLineGraphDataSet(option);
+            JFreeChart chart = ChartFactory.createLineChart(
+                    "Daily Financial Performance",
+                    "Date",
+                    "Net Income",
+                    lineDataSet,
+                    PlotOrientation.VERTICAL,
+                    false,
+                    true,
+                    true
+            );
+            LineAndShapeRenderer renderer = (LineAndShapeRenderer) chart.getCategoryPlot().getRenderer();
+            renderer.setDefaultLinesVisible(true);
+            renderer.setDefaultShapesFilled(true);
+            renderer.setDefaultShapesVisible(true);
+            chartPanel.setChart(chart);
+        }
+        if(option.equals("ClosingBalance")) {
+            CategoryDataset lineDataSet = createLineGraphDataSet(option);
+            JFreeChart chart = ChartFactory.createLineChart(
+                    "Daily Closing Balance",
+                    "Date",
+                    "Closing Balance",
+                    lineDataSet,
+                    PlotOrientation.VERTICAL,
+                    false,
+                    true,
+                    true
+            );
+            LineAndShapeRenderer renderer = (LineAndShapeRenderer) chart.getCategoryPlot().getRenderer();
+            renderer.setDefaultLinesVisible(true);
+            renderer.setDefaultShapesFilled(true);
+            renderer.setDefaultShapesVisible(true);
+            chartPanel.setChart(chart);
+        }
     }
 }
-
-/**
- * To see if i was at a positive or minus
- SELECT
- date,
- SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) -
- SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) AS running_balance
- FROM transactions
- GROUP BY date
- ORDER BY date;
- */
-
-/***
- * To get the ending-balance for each day
- WITH RankedTransactions AS (
- SELECT
- *,
- ROW_NUMBER() OVER (PARTITION BY date ORDER BY transaction_id DESC) AS row_num
- FROM transactions
- )
- SELECT
- transaction_id,
- date,
- description,
- amount,
- category_id,
- type,
- account_id,
- running_balance
- FROM RankedTransactions
- WHERE row_num = 1;
- */
