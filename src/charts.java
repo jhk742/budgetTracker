@@ -1,10 +1,10 @@
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
+import org.jfree.chart.*;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.jdbc.JDBCCategoryDataset;
@@ -24,6 +24,7 @@ public class charts extends JDialog{
     private JRadioButton radioBtnExpenses;
     private JRadioButton radioBtnNetIncome;
     private JRadioButton radioBtnClosingBalance;
+    private JRadioButton radioBtnCompareIncomeExpense;
 
     public charts(JFrame parent, loggedUser loggedU) {
         super(parent);
@@ -53,6 +54,7 @@ public class charts extends JDialog{
                 radioBtnExpenses.setSelected(false);
                 radioBtnNetIncome.setSelected(false);
                 radioBtnClosingBalance.setSelected(false);
+                radioBtnCompareIncomeExpense.setSelected(false);
                 createLineGraph("Income");
             }
         });
@@ -63,6 +65,7 @@ public class charts extends JDialog{
                 radioBtnIncome.setSelected(false);
                 radioBtnNetIncome.setSelected(false);
                 radioBtnClosingBalance.setSelected(false);
+                radioBtnCompareIncomeExpense.setSelected(false);
                 createPieChart();
             }
         });
@@ -72,6 +75,7 @@ public class charts extends JDialog{
                 radioBtnExpenses.setSelected(false);
                 radioBtnIncome.setSelected(false);
                 radioBtnClosingBalance.setSelected(false);
+                radioBtnCompareIncomeExpense.setSelected(false);
                 createLineGraph("Profit/Loss");
             }
         });
@@ -81,7 +85,18 @@ public class charts extends JDialog{
                 radioBtnExpenses.setSelected(false);
                 radioBtnIncome.setSelected(false);
                 radioBtnNetIncome.setSelected(false);
+                radioBtnCompareIncomeExpense.setSelected(false);
                 createLineGraph("ClosingBalance");
+            }
+        });
+        radioBtnCompareIncomeExpense.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                radioBtnExpenses.setSelected(false);
+                radioBtnIncome.setSelected(false);
+                radioBtnNetIncome.setSelected(false);
+                radioBtnClosingBalance.setSelected(false);
+                createBarChart();
             }
         });
     }
@@ -92,12 +107,14 @@ public class charts extends JDialog{
         radioBtnIncome = new JRadioButton("Income");
         radioBtnExpenses = new JRadioButton("Expenses");
         radioBtnNetIncome = new JRadioButton("Net Income");
+        radioBtnCompareIncomeExpense = new JRadioButton("Income vs Expenses");
         radioBtnClosingBalance = new JRadioButton("Daily Closing Balance");
         btnBack = new JButton("Back");
         radioPanel.add(radioBtnIncome);
         radioPanel.add(radioBtnExpenses);
         radioPanel.add(radioBtnNetIncome);
         radioPanel.add(radioBtnClosingBalance);
+        radioPanel.add(radioBtnCompareIncomeExpense);
         chartForm.add(radioPanel, BorderLayout.NORTH);
         chartForm.add(btnBack, BorderLayout.SOUTH);
         chartForm.add(chartPanel, BorderLayout.CENTER);
@@ -109,10 +126,10 @@ public class charts extends JDialog{
                 // income will be displayed using a line-graph
                 Connection con = ConnectionProvider.getCon();
                 JDBCCategoryDataset lineGraphDataSet = new JDBCCategoryDataset(con, "SELECT date, SUM(amount) AS total_amount\n" +
-                        "FROM transactions\n" +
-                        "WHERE type = 'Income'\n" +
-                        "GROUP BY date\n" +
-                        "ORDER BY date");
+                    "FROM transactions\n" +
+                    "WHERE type = 'Income'\n" +
+                    "GROUP BY date\n" +
+                    "ORDER BY date");
                 return lineGraphDataSet;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -122,12 +139,12 @@ public class charts extends JDialog{
             try {
                 Connection con = ConnectionProvider.getCon();
                 JDBCCategoryDataset lineGraphDataSet = new JDBCCategoryDataset(con, "SELECT\n" +
-                        " DATE(date) AS date,\n" +
-                        " SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) -\n" +
-                        " SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) AS running_balance\n" +
-                        " FROM transactions\n" +
-                        " GROUP BY DATE(date)\n" +
-                        " ORDER BY DATE(date)");
+                    " DATE(date) AS date,\n" +
+                    " SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) -\n" +
+                    " SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) AS running_balance\n" +
+                    " FROM transactions\n" +
+                    " GROUP BY DATE(date)\n" +
+                    " ORDER BY DATE(date)");
                 return lineGraphDataSet;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -137,20 +154,37 @@ public class charts extends JDialog{
             try {
                 Connection con = ConnectionProvider.getCon();
                 JDBCCategoryDataset lineGraphDataSet = new JDBCCategoryDataset(con, "WITH RankedTransactions AS (\n" +
-                        " SELECT\n" +
-                        " *,\n" +
-                        " ROW_NUMBER() OVER (PARTITION BY date ORDER BY transaction_id DESC) AS row_num\n" +
-                        " FROM transactions\n" +
-                        " )\n" +
-                        " SELECT\n" +
-                        " date,\n" +
-                        " running_balance\n" +
-                        " FROM RankedTransactions\n" +
-                        " WHERE row_num = 1;\n");
+                    " SELECT\n" +
+                    " *,\n" +
+                    " ROW_NUMBER() OVER (PARTITION BY date ORDER BY transaction_id DESC) AS row_num\n" +
+                    " FROM transactions\n" +
+                    " )\n" +
+                    " SELECT\n" +
+                    " date,\n" +
+                    " running_balance\n" +
+                    " FROM RankedTransactions\n" +
+                    " WHERE row_num = 1;\n");
                 return lineGraphDataSet;
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        return null;
+    }
+
+    private JDBCCategoryDataset createBarChartDataset() {
+        try {
+            Connection con = ConnectionProvider.getCon();
+            JDBCCategoryDataset barChartDataSet = new JDBCCategoryDataset(con, "SELECT\n" +
+                " date,\n" +
+                " SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) AS total_income,\n" +
+                " SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) AS total_expense\n" +
+                " FROM transactions\n" +
+                " GROUP BY date\n" +
+                " ORDER BY date");
+            return barChartDataSet;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -160,10 +194,10 @@ public class charts extends JDialog{
         try  {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("SELECT c.name AS category, SUM(t.amount) AS total\n" +
-                    "FROM transactions t\n" +
-                    "INNER JOIN categories c ON t.category_id = c.category_id\n" +
-                    "WHERE t.type = 'Expense'\n" +
-                    "GROUP BY c.name");
+                "FROM transactions t\n" +
+                "INNER JOIN categories c ON t.category_id = c.category_id\n" +
+                "WHERE t.type = 'Expense'\n" +
+                "GROUP BY c.name");
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 String category = rs.getString("category");
@@ -188,6 +222,25 @@ public class charts extends JDialog{
         chartPanel.setPreferredSize(new Dimension(1300, 800));
         chartPanel.setChart(chart);
         pack();
+    }
+
+    private void createBarChart() {
+        CategoryDataset barDataSet = createBarChartDataset();
+        JFreeChart chart = ChartFactory.createBarChart("Income vs Expenses",
+                "Date",
+                "Income/Expense",
+                barDataSet,
+                PlotOrientation.VERTICAL,
+                false,
+                true,
+                true
+        );
+        LegendItemCollection legendItems = new LegendItemCollection();
+        legendItems.add(new LegendItem("Income", null, null, null, new Rectangle(10, 10), Color.red));
+        legendItems.add(new LegendItem("Expenses", null, null, null, new Rectangle(10, 10), Color.blue));
+        chart.addLegend(new LegendTitle(chart.getCategoryPlot()));
+        chart.getCategoryPlot().setFixedLegendItems(legendItems);
+        chartPanel.setChart(chart);
     }
 
     private void createLineGraph(String option) {
