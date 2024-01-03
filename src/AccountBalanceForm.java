@@ -17,8 +17,6 @@ public class AccountBalanceForm extends JDialog {
     private JPanel accountBalanceForm;
     private JLabel lblUserName;
     private JTable tableTransactionHistory;
-    private JTextField txtTotalIncome;
-    private JTextField txtTotalExpenses;
     private JLabel lblTotalBalance;
     private JLabel lblTotalIncome;
     private JLabel lblTotalExpenses;
@@ -30,10 +28,6 @@ public class AccountBalanceForm extends JDialog {
     private JComboBox comboBoxIncomeFilterByDate;
     private JComboBox comboBoxExpensesFilterByDate;
 
-    private boolean incomeComboBoxInitialized = false;
-    private boolean expenseComboBoxInitialized = false;
-
-
     public AccountBalanceForm(JFrame parent, loggedUser loggedU) {
         super(parent);
         setTitle("Account Balance");
@@ -43,14 +37,13 @@ public class AccountBalanceForm extends JDialog {
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        initializeUI(loggedU);
-
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
                 getLoggedUserTotalBalance(loggedU);
                 getLoggedUserTotalIncomeAndExpense(loggedU);
                 lblUserName.setText(loggedU.name);
+                initializeUI(loggedU);
             }
         });
         btnViewAll.addActionListener(new ActionListener() {
