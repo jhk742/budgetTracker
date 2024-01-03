@@ -23,6 +23,7 @@ public class AccountBalanceForm extends JDialog {
     private JButton btnIncome;
     private JButton btnExpense;
     private JButton btnBack;
+    private JComboBox comboBoxViewAllSort;
 
 
     public AccountBalanceForm(JFrame parent, loggedUser loggedU) {
@@ -35,6 +36,8 @@ public class AccountBalanceForm extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         lblUserName.setText(loggedU.name);
+        comboBoxViewAllSort.setVisible(false);
+
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -47,18 +50,27 @@ public class AccountBalanceForm extends JDialog {
         btnViewAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                populateTableAll(tableTransactionHistory, loggedU);
+                comboBoxViewAllSort.setVisible(true);
+                //clear previous items so there are no duplicates when btnViewAll is selected again
+                comboBoxViewAllSort.removeAllItems();
+
+                comboBoxViewAllSort.addItem("--- Filter By ---");
+                comboBoxViewAllSort.addItem("Income");
+                comboBoxViewAllSort.addItem("Expenses");
+                populateTableAll(tableTransactionHistory, loggedU, "default");
             }
         });
         btnIncome.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                comboBoxViewAllSort.setVisible(false);
                 populateTableIncome(tableTransactionHistory, loggedU);
             }
         });
         btnExpense.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                comboBoxViewAllSort.setVisible(false);
                 populateTableExpenses(tableTransactionHistory, loggedU);
             }
         });
@@ -68,6 +80,15 @@ public class AccountBalanceForm extends JDialog {
                 dispose();
                 homeForm hf = new homeForm(null, loggedU);
                 hf.setVisible(true);
+            }
+        });
+        comboBoxViewAllSort.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selectedFilterOption = String.valueOf(comboBoxViewAllSort.getSelectedItem());
+                if (selectedFilterOption.equals("Income") || selectedFilterOption.equals("Expenses")) {
+                    populateTableAll(tableTransactionHistory, loggedU, selectedFilterOption);
+                }
             }
         });
     }
@@ -109,33 +130,123 @@ public class AccountBalanceForm extends JDialog {
         }
     }
 
-    public static void populateTableAll(JTable tableTransactionHistory, loggedUser loggedU) {
+    public static void populateTableAll(JTable tableTransactionHistory, loggedUser loggedU, String filterOption) {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"Amount", "Type", "Running Balance", "Category ID", "Category Name", "Date"},0
         );
         tableTransactionHistory.setModel(model);
+        Connection con = null;
+        PreparedStatement ps = null;
         try {
-            Connection con = ConnectionProvider.getCon();
-            PreparedStatement ps = con.prepareStatement("SELECT\n" +
-                    "    t.amount,\n" +
-                    "    t.type,\n" +
-                    "    t.running_balance,\n" +
-                    "    t.category_id,\n" +
-                    "    c.name,\n" +
-                    "    t.date\n" +
-                    "FROM\n" +
-                    "    transactions t\n" +
-                    "LEFT JOIN\n" +
-                    "    categories c ON t.category_id = c.category_id\n" +
-                    "WHERE t.account_id = ? AND (t.type = 'Expense' OR t.category_id IS NULL)");
-            ps.setString(1, loggedU.id);
+            con = ConnectionProvider.getCon();
+            if (filterOption.equals("default")) {
+                ps = con.prepareStatement("SELECT\n" +
+                        "    t.amount,\n" +
+                        "    t.type,\n" +
+                        "    t.running_balance,\n" +
+                        "    t.category_id,\n" +
+                        "    c.name,\n" +
+                        "    t.date\n" +
+                        "FROM\n" +
+                        "    transactions t\n" +
+                        "LEFT JOIN\n" +
+                        "    categories c ON t.category_id = c.category_id\n" +
+                        "WHERE t.account_id = ? AND (t.type = 'Expense' OR t.category_id IS NULL)");
+                ps.setString(1, loggedU.id);
+            }
+            if (filterOption.equals("Income")) {
+                ps = con.prepareStatement("SELECT\n" +
+                        "\tt.amount,\n" +
+                        "    t.type,\n" +
+                        "    t.running_balance,\n" +
+                        "    t.category_id,\n" +
+                        "    c.name,\n" +
+                        "    t.date\n" +
+                        "FROM\n" +
+                        "\ttransactions t\n" +
+                        "LEFT JOIN\n" +
+                        "\tcategories c ON t.category_id = c.category_id\n" +
+                        "WHERE t.account_id = ? AND (t.type='Expense' OR t.category_id IS NULL)\n" +
+                        "ORDER BY CASE\n" +
+                        "\tWHEN type = 'Income' THEN 1\n" +
+                        "    WHEN type = 'Expense' THEN 2\n" +
+                        "END");
+                ps.setString(1, loggedU.id);
+            }
+            if (filterOption.equals("Expenses")) {
+                ps = con.prepareStatement("SELECT\n" +
+                        "\tt.amount,\n" +
+                        "    t.type,\n" +
+                        "    t.running_balance,\n" +
+                        "    t.category_id,\n" +
+                        "    c.name,\n" +
+                        "    t.date\n" +
+                        "FROM\n" +
+                        "\ttransactions t\n" +
+                        "LEFT JOIN\n" +
+                        "\tcategories c ON t.category_id = c.category_id\n" +
+                        "WHERE t.account_id = ? AND (t.type='Expense' OR t.category_id IS NULL)\n" +
+                        "ORDER BY CASE\n" +
+                        "\tWHEN type = 'Expense' THEN 1\n" +
+                        "    WHEN type = 'Income' THEN 2\n" +
+                        "END");
+                ps.setString(1, loggedU.id);
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                model.addRow(new Object[]{rs.getString("amount"), rs.getString("type"), rs.getString("running_balance"), rs.getString("category_id"), rs.getString("name"), rs.getString("date")});
+                model.addRow(new Object[]{
+                        rs.getString("amount"),
+                        rs.getString("type"),
+                        rs.getString("running_balance"),
+                        rs.getString("category_id"),
+                        rs.getString("name"),
+                        rs.getString("date")
+                });
             }
-        } catch (Exception er) {
+        } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Error while trying to retrieve information.");
+            e.printStackTrace();
         }
+//        if (filterOption.equals("default")) {
+//            try {
+//                Connection con = ConnectionProvider.getCon();
+//                PreparedStatement ps = con.prepareStatement("SELECT\n" +
+//                        "    t.amount,\n" +
+//                        "    t.type,\n" +
+//                        "    t.running_balance,\n" +
+//                        "    t.category_id,\n" +
+//                        "    c.name,\n" +
+//                        "    t.date\n" +
+//                        "FROM\n" +
+//                        "    transactions t\n" +
+//                        "LEFT JOIN\n" +
+//                        "    categories c ON t.category_id = c.category_id\n" +
+//                        "WHERE t.account_id = ? AND (t.type = 'Expense' OR t.category_id IS NULL)");
+//                ps.setString(1, loggedU.id);
+//                ResultSet rs = ps.executeQuery();
+//                while (rs.next()) {
+//                    model.addRow(new Object[]{rs.getString("amount"), rs.getString("type"), rs.getString("running_balance"), rs.getString("category_id"), rs.getString("name"), rs.getString("date")});
+//                }
+//            } catch (Exception er) {
+//                JOptionPane.showMessageDialog(null, "Error while trying to retrieve information.");
+//            }
+//        }
+//        if (filterOption.equals("Income")) {
+//            try {
+//                Connection con = ConnectionProvider.getCon();
+//                PreparedStatement ps;
+//            } catch (Exception er2) {
+//
+//            }
+//        }
+//        if (filterOption.equals("Expenses")) {
+//            try {
+//                Connection con = ConnectionProvider.getCon();
+//                PreparedStatement ps;
+//            } catch (Exception er2) {
+//
+//            }
+//        }
     }
 
     public static void populateTableIncome(JTable tableTransactionHistory, loggedUser loggedU) {

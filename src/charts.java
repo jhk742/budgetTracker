@@ -4,7 +4,6 @@ import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.chart.title.LegendTitle;
-import org.jfree.chart.ui.RectangleEdge;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.jdbc.JDBCCategoryDataset;
