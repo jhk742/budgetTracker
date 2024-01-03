@@ -9,6 +9,9 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AccountBalanceForm extends JDialog {
     private JPanel accountBalanceForm;
@@ -24,6 +27,11 @@ public class AccountBalanceForm extends JDialog {
     private JButton btnExpense;
     private JButton btnBack;
     private JComboBox comboBoxViewAllSort;
+    private JComboBox comboBoxIncomeFilterByDate;
+    private JComboBox comboBoxExpensesFilterByDate;
+
+    private boolean incomeComboBoxInitialized = false;
+    private boolean expenseComboBoxInitialized = false;
 
 
     public AccountBalanceForm(JFrame parent, loggedUser loggedU) {
@@ -35,9 +43,7 @@ public class AccountBalanceForm extends JDialog {
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        lblUserName.setText(loggedU.name);
-        comboBoxViewAllSort.setVisible(false);
-
+        initializeUI(loggedU);
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -50,28 +56,25 @@ public class AccountBalanceForm extends JDialog {
         btnViewAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                comboBoxViewAllSort.setVisible(true);
-                //clear previous items so there are no duplicates when btnViewAll is selected again
-                comboBoxViewAllSort.removeAllItems();
-
-                comboBoxViewAllSort.addItem("--- Filter By ---");
-                comboBoxViewAllSort.addItem("Income");
-                comboBoxViewAllSort.addItem("Expenses");
+                comboBoxViewAllSort.setSelectedIndex(0);
+                toggleComboBoxes(true, false, false);
                 populateTableAll(tableTransactionHistory, loggedU, "default");
             }
         });
         btnIncome.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                comboBoxViewAllSort.setVisible(false);
-                populateTableIncome(tableTransactionHistory, loggedU);
+                comboBoxIncomeFilterByDate.setSelectedIndex(0);
+                toggleComboBoxes(false, true, false);
+                populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0));
             }
         });
         btnExpense.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                comboBoxViewAllSort.setVisible(false);
-                populateTableExpenses(tableTransactionHistory, loggedU);
+                comboBoxExpensesFilterByDate.setSelectedIndex(0);
+                toggleComboBoxes(false, false, true);
+                populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0));
             }
         });
         btnBack.addActionListener(new ActionListener() {
@@ -91,8 +94,33 @@ public class AccountBalanceForm extends JDialog {
                 }
             }
         });
+        comboBoxIncomeFilterByDate.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String date = String.valueOf(comboBoxIncomeFilterByDate.getSelectedItem());
+                System.out.println(date);
+                if (!date.equals("--- Select Year-Month ---")) {
+                    YearMonth yearMonth = YearMonth.parse(date);
+                    int year = yearMonth.getYear();
+                    int month = yearMonth.getMonthValue();
+                    populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(true, year, month));
+                }
+            }
+        });
+        comboBoxExpensesFilterByDate.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String date = String.valueOf(comboBoxExpensesFilterByDate.getSelectedItem());
+                if (!date.equals("--- Select Year-Month ---")) {
+                    YearMonth yearMonth = YearMonth.parse(date);
+                    int year = yearMonth.getYear();
+                    int month = yearMonth.getMonthValue();
+                    populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(true, year, month));
+                }
+            }
+        });
     }
-    public void getLoggedUserTotalBalance(loggedUser loggedU) {
+    private void getLoggedUserTotalBalance(loggedUser loggedU) {
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("select * from bank_accounts where user_id=?");
@@ -104,11 +132,11 @@ public class AccountBalanceForm extends JDialog {
                 lblTotalBalance.setText("$" + loggedU.totalBalance);
             }
         } catch (Exception er) {
-            System.out.println(er);
+            er.printStackTrace();
         }
     }
 
-    public void getLoggedUserTotalIncomeAndExpense(loggedUser loggedU) {
+    private void getLoggedUserTotalIncomeAndExpense(loggedUser loggedU) {
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("SELECT SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) AS total_income, " +
@@ -123,14 +151,13 @@ public class AccountBalanceForm extends JDialog {
                 loggedU.totalExpense = totalExpense;
                 lblTotalIncome.setText("$" + loggedU.totalIncome);
                 lblTotalExpenses.setText("$" + loggedU.totalExpense);
-
             }
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            e.printStackTrace();
         }
     }
 
-    public static void populateTableAll(JTable tableTransactionHistory, loggedUser loggedU, String filterOption) {
+    private void populateTableAll(JTable tableTransactionHistory, loggedUser loggedU, String filterOption) {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"Amount", "Type", "Running Balance", "Category ID", "Category Name", "Date"},0
         );
@@ -207,81 +234,59 @@ public class AccountBalanceForm extends JDialog {
             JOptionPane.showMessageDialog(null, "Error while trying to retrieve information.");
             e.printStackTrace();
         }
-//        if (filterOption.equals("default")) {
-//            try {
-//                Connection con = ConnectionProvider.getCon();
-//                PreparedStatement ps = con.prepareStatement("SELECT\n" +
-//                        "    t.amount,\n" +
-//                        "    t.type,\n" +
-//                        "    t.running_balance,\n" +
-//                        "    t.category_id,\n" +
-//                        "    c.name,\n" +
-//                        "    t.date\n" +
-//                        "FROM\n" +
-//                        "    transactions t\n" +
-//                        "LEFT JOIN\n" +
-//                        "    categories c ON t.category_id = c.category_id\n" +
-//                        "WHERE t.account_id = ? AND (t.type = 'Expense' OR t.category_id IS NULL)");
-//                ps.setString(1, loggedU.id);
-//                ResultSet rs = ps.executeQuery();
-//                while (rs.next()) {
-//                    model.addRow(new Object[]{rs.getString("amount"), rs.getString("type"), rs.getString("running_balance"), rs.getString("category_id"), rs.getString("name"), rs.getString("date")});
-//                }
-//            } catch (Exception er) {
-//                JOptionPane.showMessageDialog(null, "Error while trying to retrieve information.");
-//            }
-//        }
-//        if (filterOption.equals("Income")) {
-//            try {
-//                Connection con = ConnectionProvider.getCon();
-//                PreparedStatement ps;
-//            } catch (Exception er2) {
-//
-//            }
-//        }
-//        if (filterOption.equals("Expenses")) {
-//            try {
-//                Connection con = ConnectionProvider.getCon();
-//                PreparedStatement ps;
-//            } catch (Exception er2) {
-//
-//            }
-//        }
     }
 
-    public static void populateTableIncome(JTable tableTransactionHistory, loggedUser loggedU) {
+    private void populateTableIncome(JTable tableTransactionHistory, loggedUser loggedU, optionAndDateFilterObject filter) {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"Amount", "Type", "Running Balance", "Date"},0
         );
         tableTransactionHistory.setModel(model);
+        Connection con = null;
+        PreparedStatement ps = null;
         try {
-            Connection con = ConnectionProvider.getCon();
-            PreparedStatement ps = con.prepareStatement("SELECT\n" +
-                    "   amount,\n" +
-                    "   type,\n" +
-                    "   running_balance,\n" +
-                    "   date\n" +
-                    "FROM\n" +
-                    "   transactions\n" +
-                    "WHERE type = 'Income' AND account_id = ?");
-            ps.setString(1, loggedU.id);
+            con = ConnectionProvider.getCon();
+            if (filter.toggleFilter == false) {
+                ps = con.prepareStatement("SELECT\n" +
+                        "   amount,\n" +
+                        "   type,\n" +
+                        "   running_balance,\n" +
+                        "   date\n" +
+                        "FROM\n" +
+                        "   transactions\n" +
+                        "WHERE type = 'Income' AND account_id = ?");
+                ps.setString(1, loggedU.id);
+            }
+            if (filter.toggleFilter == true) {
+                ps = con.prepareStatement("SELECT t.amount, t.type, t.running_balance, t.date\n" +
+                        " FROM transactions t\n" +
+                        " LEFT JOIN categories c ON t.category_id = c.category_id\n" +
+                        " WHERE t.account_id = ? AND t.type = 'Income'\n" +
+                        " AND YEAR(t.date) = ? AND MONTH(t.date) = ?");
+                ps.setString(1, loggedU.id);
+                ps.setInt(2, filter.year);
+                ps.setInt(3, filter.month);
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 model.addRow(new Object[]{rs.getString("amount"), rs.getString("type"), rs.getString("running_balance"), rs.getString("date")});
             }
-        } catch (Exception er) {
-            JOptionPane.showMessageDialog(null, "Error while trying to retrieve information.");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error while trying to retrieve data.");
+            e.printStackTrace();
         }
     }
 
-    public static void populateTableExpenses(JTable tableTransactionHistory, loggedUser loggedU) {
+    private void populateTableExpenses(JTable tableTransactionHistory, loggedUser loggedU, optionAndDateFilterObject filter) {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"Amount", "Type", "Running Balance", "Payment Method", "Category ID", "Category Name", "Description", "Date"},0
         );
         tableTransactionHistory.setModel(model);
+        Connection con = null;
+        PreparedStatement ps = null;
         try {
-            Connection con = ConnectionProvider.getCon();
-            PreparedStatement ps = con.prepareStatement("SELECT\n" +
+            con = ConnectionProvider.getCon();
+            if (filter.toggleFilter == false) {
+                ps = con.prepareStatement("SELECT\n" +
                     "    t.amount,\n" +
                     "    t.type,\n" +
                     "    t.running_balance,\n" +
@@ -297,13 +302,109 @@ public class AccountBalanceForm extends JDialog {
                     "WHERE\n" +
                     "    t.type = 'Expense'\n" +
                     "    AND t.account_id = ?");
-            ps.setString(1, loggedU.id);
+                ps.setString(1, loggedU.id);
+            };
+            if (filter.toggleFilter == true) {
+                ps = con.prepareStatement("SELECT t.amount, t.type, t.running_balance, t.payment_method, t.category_id, c.name, t.description, t.date\n" +
+                        " FROM transactions t\n" +
+                        " LEFT JOIN categories c ON t.category_id = c.category_id\n" +
+                        " WHERE t.account_id = ? AND t.type = 'Expense'\n" +
+                        " AND YEAR(t.date) = ? AND MONTH(t.date) = ?;");
+                ps.setString(1, loggedU.id);
+                ps.setInt(2, filter.year);
+                ps.setInt(3, filter.month);
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                model.addRow(new Object[]{rs.getString("amount"), rs.getString("type"), rs.getString("running_balance"), rs.getString("payment_method"), rs.getString("category_id"), rs.getString("name"), rs.getString("description"), rs.getString("date")});
+                model.addRow(new Object[]{
+                        rs.getString("amount"),
+                        rs.getString("type"),
+                        rs.getString("running_balance"),
+                        rs.getString("payment_method"),
+                        rs.getString("category_id"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getString("date")
+                });
             }
-        } catch (Exception er) {
-            JOptionPane.showMessageDialog(null, "Error while trying to retrieve information.");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error while trying to retrieve data.");
+            e.printStackTrace();
         }
+    }
+
+    private ArrayList<String> populateDateFilterComboBox() {
+        ArrayList<String> dates = new ArrayList<>();
+        try {
+            Connection con = ConnectionProvider.getCon();
+            PreparedStatement ps = con.prepareStatement("SELECT DISTINCT " +
+                    "CONCAT(YEAR(date), '-', LPAD(MONTH(date), 2, '0')) AS 'year_month' " +
+                    "FROM transactions " +
+                    "ORDER BY 'year_month' DESC");
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                dates.add(rs.getString("year_month"));
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error while trying to retrieve data.");
+            e.printStackTrace();
+        }
+        return dates;
+    }
+
+    private void initializeComboBoxes() {
+        List<String> yearMonthOptions = populateDateFilterComboBox();
+        comboBoxExpensesFilterByDate.addItem("--- Select Year-Month ---");
+        comboBoxIncomeFilterByDate.addItem("--- Select Year-Month ---");
+        for (String dates : yearMonthOptions) {
+            comboBoxIncomeFilterByDate.addItem(dates);
+            comboBoxExpensesFilterByDate.addItem(dates);
+        }
+        comboBoxViewAllSort.addItem("--- Filter By ---");
+        comboBoxViewAllSort.addItem("Income");
+        comboBoxViewAllSort.addItem("Expenses");
+
+    }
+
+    private void initializeViewAllFilterComboBox() {
+        comboBoxViewAllSort.removeAllItems();
+        comboBoxViewAllSort.addItem("--- Filter By ---");
+        comboBoxViewAllSort.addItem("Income");
+        comboBoxViewAllSort.addItem("Expenses");
+    }
+
+    private void toggleComboBoxes(boolean viewAll, boolean income, boolean expenses) {
+        comboBoxViewAllSort.setEnabled(viewAll);
+        comboBoxIncomeFilterByDate.setEnabled(income);
+        comboBoxExpensesFilterByDate.setEnabled(expenses);
+        if(!viewAll) {
+            comboBoxViewAllSort.setSelectedIndex(0);
+        }
+        if(!income) {
+            comboBoxIncomeFilterByDate.setSelectedIndex(0);
+        }
+        if(!expenses) {
+            comboBoxExpensesFilterByDate.setSelectedIndex(0);
+        }
+    }
+
+    private void initializeUI(loggedUser loggedU) {
+        initializeComboBoxes();
+        lblUserName.setText(loggedU.name);
+        comboBoxViewAllSort.setEnabled(false);
+        comboBoxIncomeFilterByDate.setEnabled(false);
+        comboBoxExpensesFilterByDate.setEnabled(false);
+    }
+}
+
+class optionAndDateFilterObject {
+    public boolean toggleFilter;
+    public int year;
+    public int month;
+
+    public optionAndDateFilterObject(boolean toggleFilter, int year, int month) {
+        this.toggleFilter = toggleFilter;
+        this.year = year;
+        this.month = month;
     }
 }
