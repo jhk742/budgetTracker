@@ -35,12 +35,12 @@ public class AccountBalanceForm extends JDialog {
     private JTextField txtExpenseStartDate;
     private JTextField txtExpenseEndDate;
 
-    Map<String, JButton> dateRangeButtonMap = new HashMap<String, JButton>() {{
+    private Map<String, JButton> dateRangeButtonMap = new HashMap<String, JButton>() {{
         put("totalDateRangeConfirmBtn", totalDateRangeConfirmBtn);
         put("incomeDateRangeConfirmBtn", incomeDateRangeConfirmBtn);
         put("expenseDateRangeConfirmBtn", expenseDateRangeConfirmBtn);
     }};
-    ArrayList<JTextField> dateRangeTxtFields = new ArrayList<>(
+    private ArrayList<JTextField> dateRangeTxtFields = new ArrayList<>(
             Arrays.asList(
                     txtTotalStartDate,
                     txtTotalEndDate,
@@ -51,7 +51,7 @@ public class AccountBalanceForm extends JDialog {
             )
     );
 
-    Map<String, JTextField> dateRangeTxtFieldMap = new HashMap<String, JTextField>() {{
+    private Map<String, JTextField> dateRangeTxtFieldMap = new HashMap<String, JTextField>() {{
         put("txtTotalStartDate", txtTotalStartDate);
         put("txtTotalEndDate", txtTotalEndDate);
         put("txtIncomeStartDate", txtIncomeStartDate);
