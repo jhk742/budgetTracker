@@ -79,6 +79,7 @@ public class AccountBalanceForm extends JDialog {
                 initializeUI(loggedU);
             }
         });
+        
         btnViewAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -96,6 +97,7 @@ public class AccountBalanceForm extends JDialog {
                 populateTableAll(tableTransactionHistory, loggedU, "default");
             }
         });
+
         btnIncome.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -113,6 +115,7 @@ public class AccountBalanceForm extends JDialog {
                 populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0));
             }
         });
+
         btnExpense.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -130,6 +133,7 @@ public class AccountBalanceForm extends JDialog {
                 populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0));
             }
         });
+
         btnBack.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -138,6 +142,7 @@ public class AccountBalanceForm extends JDialog {
                 hf.setVisible(true);
             }
         });
+
         comboBoxViewAllSort.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -147,6 +152,7 @@ public class AccountBalanceForm extends JDialog {
                 }
             }
         });
+
         comboBoxIncomeFilterByDate.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -159,6 +165,7 @@ public class AccountBalanceForm extends JDialog {
                 }
             }
         });
+
         comboBoxExpensesFilterByDate.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -247,7 +254,6 @@ public class AccountBalanceForm extends JDialog {
     }
 
     private void toggleDateRangePlaceHolder(/*ArrayList<JTextField> dateRanges*/) {
-//        ArrayList<JTextField> dateRangeTxtFields = dateRanges;
         for (int i = 0; i < dateRangeTxtFields.size(); i++) {
             JTextField targetTxtfield = dateRangeTxtFields.get(i);
             if (i % 2 == 0) {
