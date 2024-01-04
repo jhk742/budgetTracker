@@ -3,10 +3,13 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.List;
 
@@ -34,6 +37,9 @@ public class AccountBalanceForm extends JDialog {
     private JTextField txtIncomeEndDate;
     private JTextField txtExpenseStartDate;
     private JTextField txtExpenseEndDate;
+
+    private String startDate;
+    private String endDate;
 
     private Map<String, JButton> dateRangeButtonMap = new HashMap<String, JButton>() {{
         put("totalDateRangeConfirmBtn", totalDateRangeConfirmBtn);
@@ -79,7 +85,7 @@ public class AccountBalanceForm extends JDialog {
                 initializeUI(loggedU);
             }
         });
-        
+
         btnViewAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -112,7 +118,7 @@ public class AccountBalanceForm extends JDialog {
                 );
                 comboBoxIncomeFilterByDate.setSelectedIndex(0);
                 toggleComboBoxes(false, true, false);
-                populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0));
+                populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), false);
             }
         });
 
@@ -130,7 +136,7 @@ public class AccountBalanceForm extends JDialog {
                 );
                 comboBoxExpensesFilterByDate.setSelectedIndex(0);
                 toggleComboBoxes(false, false, true);
-                populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0));
+                populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), false);
             }
         });
 
@@ -161,7 +167,7 @@ public class AccountBalanceForm extends JDialog {
                     YearMonth yearMonth = YearMonth.parse(date);
                     int year = yearMonth.getYear();
                     int month = yearMonth.getMonthValue();
-                    populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(true, year, month));
+                    populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(true, year, month), false);
                 }
             }
         });
@@ -174,13 +180,13 @@ public class AccountBalanceForm extends JDialog {
                     YearMonth yearMonth = YearMonth.parse(date);
                     int year = yearMonth.getYear();
                     int month = yearMonth.getMonthValue();
-                    populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(true, year, month));
+                    populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(true, year, month), false);
                 }
             }
         });
 
         txtTotalStartDate.addFocusListener(new FocusAdapter() {
-            String startDate = "Enter Start Date: yyyy-MM-dd";
+            String startDate = "Enter Start Date: yyyy-mm-dd";
             @Override
             public void focusGained(FocusEvent e) {
                 super.focusGained(e);
@@ -197,6 +203,68 @@ public class AccountBalanceForm extends JDialog {
                 }
             }
         });
+
+        totalDateRangeConfirmBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startDate = txtTotalStartDate.getText();
+                endDate = txtTotalEndDate.getText();
+                boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtTotalStartDate, txtTotalEndDate)));
+                if (validation) {
+                    populateTableAll(tableTransactionHistory, loggedU, "DateRange");
+                }
+            }
+        });
+        incomeDateRangeConfirmBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startDate = txtIncomeStartDate.getText();
+                endDate = txtIncomeEndDate.getText();
+                boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtIncomeStartDate, txtIncomeEndDate)));
+                if (validation) {
+                    populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), true);
+                }
+            }
+        });
+        expenseDateRangeConfirmBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startDate = txtExpenseStartDate.getText();
+                endDate = txtExpenseEndDate.getText();
+                boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtExpenseStartDate, txtExpenseEndDate)));
+                if (validation) {
+                    populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), true);
+                }
+            }
+        });
+    }
+
+    private boolean authenticateDates(String startDate, String endDate, ArrayList<JTextField> textFields) {
+        //no need to check with .isEmpty() as textFields that are empty will revert back to the placeholder upon losing focus.
+        if (!startDate.equals("Enter Start Date: yyyy-mm-dd") || !endDate.equals("Enter End Date: yyyy-mm-dd")) {
+            try {
+                LocalDate start = LocalDate.parse(startDate);
+                LocalDate end = LocalDate.parse(endDate);
+                if (end.isBefore(start)) {
+                    JOptionPane.showMessageDialog(null, "Error: The start date cannot be after the end date. Please select a valid date range.");
+                    //revert text back to placeholder
+                    toggleDateRangePlaceHolder();
+                    return false;
+                }
+                if (start.isAfter(LocalDate.now())) {
+                    JOptionPane.showMessageDialog(null, "Error: The start date cannot be after the current date. Please select a valid date range.");
+                    toggleDateRangePlaceHolder();
+                    return false;
+                }
+                return true;
+            } catch (DateTimeParseException e) {
+                JOptionPane.showMessageDialog(null, "Error: Invalid date format. Please enter dates in the format yyyy-mm-dd.");
+                toggleDateRangePlaceHolder();
+                return false;
+            }
+        }
+        JOptionPane.showMessageDialog(null, "Please provide values for \"Start Date\" and \"End Date\".");
+        return false;
     }
 
     private void toggleSpecificDateRangesAndButtons(Map<String, JTextField> dateTxtField, Map<String, JButton> dateBtn) {
@@ -243,7 +311,6 @@ public class AccountBalanceForm extends JDialog {
                     txtField.setForeground(Color.BLACK);
                 }
             }
-
             public void focusLost(FocusEvent e) {
                 if (txtField.getText().isEmpty()) {
                     txtField.setText(startOrEnd.equals("start") ? startDate : endDate);
@@ -253,7 +320,7 @@ public class AccountBalanceForm extends JDialog {
         });
     }
 
-    private void toggleDateRangePlaceHolder(/*ArrayList<JTextField> dateRanges*/) {
+    private void toggleDateRangePlaceHolder() {
         for (int i = 0; i < dateRangeTxtFields.size(); i++) {
             JTextField targetTxtfield = dateRangeTxtFields.get(i);
             if (i % 2 == 0) {
@@ -362,6 +429,23 @@ public class AccountBalanceForm extends JDialog {
                         "END");
                 ps.setString(1, loggedU.id);
             }
+            if (filterOption.equals("DateRange")) {
+                ps = con.prepareStatement("SELECT\n" +
+                        "\tt.amount,\n" +
+                        "    t.type,\n" +
+                        "    t.running_balance,\n" +
+                        "    t.category_id,\n" +
+                        "    c.name,\n" +
+                        "    t.date\n" +
+                        "FROM\n" +
+                        "\ttransactions t\n" +
+                        "LEFT JOIN\n" +
+                        "\tcategories c ON t.category_id = c.category_id\n" +
+                        "WHERE t.account_id = ? AND (t.type='Expense' OR t.category_id IS NULL) AND t.date IN (?, ?)");
+                ps.setString(1, loggedU.id);
+                ps.setString(2, startDate);
+                ps.setString(3, endDate);
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 model.addRow(new Object[]{
@@ -379,7 +463,7 @@ public class AccountBalanceForm extends JDialog {
         }
     }
 
-    private void populateTableIncome(JTable tableTransactionHistory, loggedUser loggedU, optionAndDateFilterObject filter) {
+    private void populateTableIncome(JTable tableTransactionHistory, loggedUser loggedU, optionAndDateFilterObject filter, boolean dateRange) {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"Amount", "Type", "Running Balance", "Date"},0
         );
@@ -409,6 +493,16 @@ public class AccountBalanceForm extends JDialog {
                 ps.setInt(2, filter.year);
                 ps.setInt(3, filter.month);
             }
+            if (dateRange) {
+                System.out.println(startDate + " " + endDate);
+                ps = con.prepareStatement("SELECT amount, type, running_balance, date " +
+                        "FROM transactions\n" +
+                        "WHERE\n" +
+                        "type = 'Income' AND account_id = ? AND date IN (?, ?)");
+                ps.setString(1, loggedU.id);
+                ps.setString(2, startDate);
+                ps.setString(3, endDate);
+            }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 model.addRow(new Object[]{rs.getString("amount"), rs.getString("type"), rs.getString("running_balance"), rs.getString("date")});
@@ -419,7 +513,7 @@ public class AccountBalanceForm extends JDialog {
         }
     }
 
-    private void populateTableExpenses(JTable tableTransactionHistory, loggedUser loggedU, optionAndDateFilterObject filter) {
+    private void populateTableExpenses(JTable tableTransactionHistory, loggedUser loggedU, optionAndDateFilterObject filter, boolean dateRange) {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"Amount", "Type", "Running Balance", "Payment Method", "Category ID", "Category Name", "Description", "Date"},0
         );
@@ -452,10 +546,21 @@ public class AccountBalanceForm extends JDialog {
                         " FROM transactions t\n" +
                         " LEFT JOIN categories c ON t.category_id = c.category_id\n" +
                         " WHERE t.account_id = ? AND t.type = 'Expense'\n" +
-                        " AND YEAR(t.date) = ? AND MONTH(t.date) = ?;");
+                        " AND YEAR(t.date) = ? AND MONTH(t.date) = ?");
                 ps.setString(1, loggedU.id);
                 ps.setInt(2, filter.year);
                 ps.setInt(3, filter.month);
+            }
+            if (dateRange) {
+                System.out.println(startDate + " " + endDate);
+                ps = con.prepareStatement("SELECT t.amount, t.type, t.running_balance, t.payment_method, t.category_id, c.name, t.description, t.date\n" +
+                        "FROM transactions t\n" +
+                        "INNER JOIN categories c ON t.category_id = c.category_id\n" +
+                        "WHERE t.type = 'Expense'\n" +
+                        "AND t.account_id = ? AND t.date IN (?, ?)");
+                ps.setString(1, loggedU.id);
+                ps.setString(2, startDate);
+                ps.setString(3, endDate);
             }
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
