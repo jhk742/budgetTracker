@@ -2,7 +2,6 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,6 +13,7 @@ import java.util.List;
 
 public class AccountBalanceForm extends JDialog {
     private JPanel accountBalanceForm;
+    private JPanel totalDateRangePanel;
     private JLabel lblUserName;
     private JTable tableTransactionHistory;
     private JLabel lblTotalBalance;
@@ -29,7 +29,6 @@ public class AccountBalanceForm extends JDialog {
     private JButton expenseDateRangeConfirmBtn;
     private JButton incomeDateRangeConfirmBtn;
     private JButton totalDateRangeConfirmBtn;
-    private JPanel totalDateRangePanel;
     private JTextField txtTotalStartDate;
     private JTextField txtTotalEndDate;
     private JTextField txtIncomeStartDate;
@@ -164,7 +163,7 @@ public class AccountBalanceForm extends JDialog {
         });
 
         txtTotalStartDate.addFocusListener(new FocusAdapter() {
-            String startDate = "Enter Start Date: yyyy-mm-dd";
+            final String startDate = "Enter Start Date: yyyy-mm-dd";
             @Override
             public void focusGained(FocusEvent e) {
                 super.focusGained(e);
@@ -185,7 +184,7 @@ public class AccountBalanceForm extends JDialog {
         totalDateRangeConfirmBtn.addActionListener(e -> {
             startDate = txtTotalStartDate.getText();
             endDate = txtTotalEndDate.getText();
-            boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtTotalStartDate, txtTotalEndDate)));
+            boolean validation = authenticateDates(startDate, endDate);
             if (validation) {
                 populateTableAll(tableTransactionHistory, loggedU, "DateRange");
             }
@@ -194,7 +193,7 @@ public class AccountBalanceForm extends JDialog {
         incomeDateRangeConfirmBtn.addActionListener(e -> {
             startDate = txtIncomeStartDate.getText();
             endDate = txtIncomeEndDate.getText();
-            boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtIncomeStartDate, txtIncomeEndDate)));
+            boolean validation = authenticateDates(startDate, endDate);
             if (validation) {
                 populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), true);
             }
@@ -203,14 +202,14 @@ public class AccountBalanceForm extends JDialog {
         expenseDateRangeConfirmBtn.addActionListener(e -> {
             startDate = txtExpenseStartDate.getText();
             endDate = txtExpenseEndDate.getText();
-            boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtExpenseStartDate, txtExpenseEndDate)));
+            boolean validation = authenticateDates(startDate, endDate);
             if (validation) {
                 populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), true);
             }
         });
     }
 
-    private boolean authenticateDates(String startDate, String endDate, ArrayList<JTextField> textFields) {
+    private boolean authenticateDates(String startDate, String endDate) {
         //no need to check with .isEmpty() as textFields that are empty will revert back to the placeholder upon losing focus.
         if (!startDate.equals("Enter Start Date: yyyy-mm-dd") || !endDate.equals("Enter End Date: yyyy-mm-dd")) {
             try {
@@ -261,11 +260,7 @@ public class AccountBalanceForm extends JDialog {
         for (Map.Entry<String, JButton> entry : dateRangeButtonMap.entrySet()) {
             String targetKey = entry.getKey();
             JButton targetButton = entry.getValue();
-            if (!dateBtn.containsKey(targetKey)) {
-                targetButton.setEnabled(false);
-            } else {
-                targetButton.setEnabled(true);
-            }
+            targetButton.setEnabled(dateBtn.containsKey(targetKey));
         }
     }
 
@@ -309,8 +304,7 @@ public class AccountBalanceForm extends JDialog {
             ps.setString(1, loggedU.id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                BigDecimal totalBalance = rs.getBigDecimal("account_balance");
-                loggedU.totalBalance = totalBalance;
+                loggedU.totalBalance = rs.getBigDecimal("account_balance");
                 lblTotalBalance.setText("$" + loggedU.totalBalance);
             }
         } catch (Exception er) {
@@ -327,10 +321,8 @@ public class AccountBalanceForm extends JDialog {
             ps.setString(1, loggedU.id);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                BigDecimal totalIncome = rs.getBigDecimal("total_income");
-                BigDecimal totalExpense = rs.getBigDecimal("total_expense");
-                loggedU.totalIncome = totalIncome;
-                loggedU.totalExpense = totalExpense;
+                loggedU.totalIncome = rs.getBigDecimal("total_income");
+                loggedU.totalExpense = rs.getBigDecimal("total_expense");
                 lblTotalIncome.setText("$" + loggedU.totalIncome);
                 lblTotalExpenses.setText("$" + loggedU.totalExpense);
             }
@@ -444,7 +436,7 @@ public class AccountBalanceForm extends JDialog {
         PreparedStatement ps = null;
         try {
             con = ConnectionProvider.getCon();
-            if (filter.toggleFilter == false) {
+            if (!filter.toggleFilter) {
                 ps = con.prepareStatement("SELECT\n" +
                         "   amount,\n" +
                         "   type,\n" +
@@ -455,7 +447,7 @@ public class AccountBalanceForm extends JDialog {
                         "WHERE type = 'Income' AND account_id = ?");
                 ps.setString(1, loggedU.id);
             }
-            if (filter.toggleFilter == true) {
+            if (filter.toggleFilter) {
                 ps = con.prepareStatement("SELECT t.amount, t.type, t.running_balance, t.date\n" +
                         " FROM transactions t\n" +
                         " LEFT JOIN categories c ON t.category_id = c.category_id\n" +
@@ -494,7 +486,7 @@ public class AccountBalanceForm extends JDialog {
         PreparedStatement ps = null;
         try {
             con = ConnectionProvider.getCon();
-            if (filter.toggleFilter == false) {
+            if (!filter.toggleFilter) {
                 ps = con.prepareStatement("SELECT\n" +
                     "    t.amount,\n" +
                     "    t.type,\n" +
@@ -512,8 +504,8 @@ public class AccountBalanceForm extends JDialog {
                     "    t.type = 'Expense'\n" +
                     "    AND t.account_id = ?");
                 ps.setString(1, loggedU.id);
-            };
-            if (filter.toggleFilter == true) {
+            }
+            if (filter.toggleFilter) {
                 ps = con.prepareStatement("SELECT t.amount, t.type, t.running_balance, t.payment_method, t.category_id, c.name, t.description, t.date\n" +
                         " FROM transactions t\n" +
                         " LEFT JOIN categories c ON t.category_id = c.category_id\n" +
