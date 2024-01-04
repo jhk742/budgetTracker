@@ -3,7 +3,6 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
-import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -41,12 +40,12 @@ public class AccountBalanceForm extends JDialog {
     private String startDate;
     private String endDate;
 
-    private Map<String, JButton> dateRangeButtonMap = new HashMap<String, JButton>() {{
+    private final Map<String, JButton> dateRangeButtonMap = new HashMap<String, JButton>() {{
         put("totalDateRangeConfirmBtn", totalDateRangeConfirmBtn);
         put("incomeDateRangeConfirmBtn", incomeDateRangeConfirmBtn);
         put("expenseDateRangeConfirmBtn", expenseDateRangeConfirmBtn);
     }};
-    private ArrayList<JTextField> dateRangeTxtFields = new ArrayList<>(
+    private final ArrayList<JTextField> dateRangeTxtFields = new ArrayList<>(
             Arrays.asList(
                     txtTotalStartDate,
                     txtTotalEndDate,
@@ -57,7 +56,7 @@ public class AccountBalanceForm extends JDialog {
             )
     );
 
-    private Map<String, JTextField> dateRangeTxtFieldMap = new HashMap<String, JTextField>() {{
+    private final Map<String, JTextField> dateRangeTxtFieldMap = new HashMap<String, JTextField>() {{
         put("txtTotalStartDate", txtTotalStartDate);
         put("txtTotalEndDate", txtTotalEndDate);
         put("txtIncomeStartDate", txtIncomeStartDate);
@@ -86,102 +85,81 @@ public class AccountBalanceForm extends JDialog {
             }
         });
 
-        btnViewAll.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                toggleSpecificDateRangesAndButtons(
-                    new HashMap<String, JTextField>() {{
-                        put("txtTotalStartDate", txtTotalStartDate);
-                        put("txtTotalEndDate", txtTotalEndDate);
-                    }},
-                    new HashMap<String, JButton>() {{
-                        put("totalDateRangeConfirmBtn", totalDateRangeConfirmBtn);
-                    }}
-                );
-                comboBoxViewAllSort.setSelectedIndex(0);
-                toggleComboBoxes(true, false, false);
-                populateTableAll(tableTransactionHistory, loggedU, "default");
-            }
-        });
-
-        btnIncome.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                toggleSpecificDateRangesAndButtons(
-                    new HashMap<String, JTextField>() {{
-                        put("txtIncomeStartDate", txtIncomeStartDate);
-                        put("txtIncomeEndDate", txtIncomeEndDate);
+        btnViewAll.addActionListener(e -> {
+            toggleSpecificDateRangesAndButtons(
+                new HashMap<String, JTextField>() {{
+                    put("txtTotalStartDate", txtTotalStartDate);
+                    put("txtTotalEndDate", txtTotalEndDate);
                 }},
-                    new HashMap<String, JButton>() {{
-                        put("incomeDateRangeConfirmBtn", incomeDateRangeConfirmBtn);
-                    }}
-                );
-                comboBoxIncomeFilterByDate.setSelectedIndex(0);
-                toggleComboBoxes(false, true, false);
-                populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), false);
+                new HashMap<String, JButton>() {{
+                    put("totalDateRangeConfirmBtn", totalDateRangeConfirmBtn);
+                }}
+            );
+            comboBoxViewAllSort.setSelectedIndex(0);
+            toggleComboBoxes(true, false, false);
+            populateTableAll(tableTransactionHistory, loggedU, "default");
+        });
+
+        btnIncome.addActionListener(e -> {
+            toggleSpecificDateRangesAndButtons(
+                new HashMap<String, JTextField>() {{
+                    put("txtIncomeStartDate", txtIncomeStartDate);
+                    put("txtIncomeEndDate", txtIncomeEndDate);
+            }},
+                new HashMap<String, JButton>() {{
+                    put("incomeDateRangeConfirmBtn", incomeDateRangeConfirmBtn);
+                }}
+            );
+            comboBoxIncomeFilterByDate.setSelectedIndex(0);
+            toggleComboBoxes(false, true, false);
+            populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), false);
+        });
+
+        btnExpense.addActionListener(e -> {
+            toggleSpecificDateRangesAndButtons(
+                new HashMap<String, JTextField>() {{
+                    put("txtExpenseStartDate", txtExpenseStartDate);
+                    put("txtExpenseEndDate", txtExpenseEndDate);
+            }},
+                new HashMap<String, JButton>() {{
+                    put("expenseDateRangeConfirmBtn", expenseDateRangeConfirmBtn);
+                }}
+            );
+            comboBoxExpensesFilterByDate.setSelectedIndex(0);
+            toggleComboBoxes(false, false, true);
+            populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), false);
+        });
+
+        btnBack.addActionListener(e -> {
+            dispose();
+            homeForm hf = new homeForm(null, loggedU);
+            hf.setVisible(true);
+        });
+
+        comboBoxViewAllSort.addActionListener(e -> {
+            String selectedFilterOption = String.valueOf(comboBoxViewAllSort.getSelectedItem());
+            if (selectedFilterOption.equals("Income") || selectedFilterOption.equals("Expenses")) {
+                populateTableAll(tableTransactionHistory, loggedU, selectedFilterOption);
             }
         });
 
-        btnExpense.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                toggleSpecificDateRangesAndButtons(
-                    new HashMap<String, JTextField>() {{
-                        put("txtExpenseStartDate", txtExpenseStartDate);
-                        put("txtExpenseEndDate", txtExpenseEndDate);
-                }},
-                    new HashMap<String, JButton>() {{
-                        put("expenseDateRangeConfirmBtn", expenseDateRangeConfirmBtn);
-                    }}
-                );
-                comboBoxExpensesFilterByDate.setSelectedIndex(0);
-                toggleComboBoxes(false, false, true);
-                populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), false);
+        comboBoxIncomeFilterByDate.addActionListener(e -> {
+            String date = String.valueOf(comboBoxIncomeFilterByDate.getSelectedItem());
+            if (!date.equals("--- Select Year-Month ---")) {
+                YearMonth yearMonth = YearMonth.parse(date);
+                int year = yearMonth.getYear();
+                int month = yearMonth.getMonthValue();
+                populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(true, year, month), false);
             }
         });
 
-        btnBack.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-                homeForm hf = new homeForm(null, loggedU);
-                hf.setVisible(true);
-            }
-        });
-
-        comboBoxViewAllSort.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String selectedFilterOption = String.valueOf(comboBoxViewAllSort.getSelectedItem());
-                if (selectedFilterOption.equals("Income") || selectedFilterOption.equals("Expenses")) {
-                    populateTableAll(tableTransactionHistory, loggedU, selectedFilterOption);
-                }
-            }
-        });
-
-        comboBoxIncomeFilterByDate.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String date = String.valueOf(comboBoxIncomeFilterByDate.getSelectedItem());
-                if (!date.equals("--- Select Year-Month ---")) {
-                    YearMonth yearMonth = YearMonth.parse(date);
-                    int year = yearMonth.getYear();
-                    int month = yearMonth.getMonthValue();
-                    populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(true, year, month), false);
-                }
-            }
-        });
-
-        comboBoxExpensesFilterByDate.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String date = String.valueOf(comboBoxExpensesFilterByDate.getSelectedItem());
-                if (!date.equals("--- Select Year-Month ---")) {
-                    YearMonth yearMonth = YearMonth.parse(date);
-                    int year = yearMonth.getYear();
-                    int month = yearMonth.getMonthValue();
-                    populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(true, year, month), false);
-                }
+        comboBoxExpensesFilterByDate.addActionListener(e -> {
+            String date = String.valueOf(comboBoxExpensesFilterByDate.getSelectedItem());
+            if (!date.equals("--- Select Year-Month ---")) {
+                YearMonth yearMonth = YearMonth.parse(date);
+                int year = yearMonth.getYear();
+                int month = yearMonth.getMonthValue();
+                populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(true, year, month), false);
             }
         });
 
@@ -204,39 +182,30 @@ public class AccountBalanceForm extends JDialog {
             }
         });
 
-        totalDateRangeConfirmBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startDate = txtTotalStartDate.getText();
-                endDate = txtTotalEndDate.getText();
-                boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtTotalStartDate, txtTotalEndDate)));
-                if (validation) {
-                    populateTableAll(tableTransactionHistory, loggedU, "DateRange");
-                }
-            }
-        });
-        
-        incomeDateRangeConfirmBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startDate = txtIncomeStartDate.getText();
-                endDate = txtIncomeEndDate.getText();
-                boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtIncomeStartDate, txtIncomeEndDate)));
-                if (validation) {
-                    populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), true);
-                }
+        totalDateRangeConfirmBtn.addActionListener(e -> {
+            startDate = txtTotalStartDate.getText();
+            endDate = txtTotalEndDate.getText();
+            boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtTotalStartDate, txtTotalEndDate)));
+            if (validation) {
+                populateTableAll(tableTransactionHistory, loggedU, "DateRange");
             }
         });
 
-        expenseDateRangeConfirmBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startDate = txtExpenseStartDate.getText();
-                endDate = txtExpenseEndDate.getText();
-                boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtExpenseStartDate, txtExpenseEndDate)));
-                if (validation) {
-                    populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), true);
-                }
+        incomeDateRangeConfirmBtn.addActionListener(e -> {
+            startDate = txtIncomeStartDate.getText();
+            endDate = txtIncomeEndDate.getText();
+            boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtIncomeStartDate, txtIncomeEndDate)));
+            if (validation) {
+                populateTableIncome(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), true);
+            }
+        });
+
+        expenseDateRangeConfirmBtn.addActionListener(e -> {
+            startDate = txtExpenseStartDate.getText();
+            endDate = txtExpenseEndDate.getText();
+            boolean validation = authenticateDates(startDate, endDate, new ArrayList<JTextField>(Arrays.asList(txtExpenseStartDate, txtExpenseEndDate)));
+            if (validation) {
+                populateTableExpenses(tableTransactionHistory, loggedU, new optionAndDateFilterObject(false, 0, 0), true);
             }
         });
     }
