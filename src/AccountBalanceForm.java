@@ -258,9 +258,7 @@ public class AccountBalanceForm extends JDialog {
             }
         }
         for (Map.Entry<String, JButton> entry : dateRangeButtonMap.entrySet()) {
-            String targetKey = entry.getKey();
-            JButton targetButton = entry.getValue();
-            targetButton.setEnabled(dateBtn.containsKey(targetKey));
+            entry.getValue().setEnabled(dateBtn.containsKey(entry.getKey()));
         }
     }
 
