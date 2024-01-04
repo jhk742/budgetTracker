@@ -31,7 +31,7 @@ public class categoriesForm extends JDialog {
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        //2. when opened from transactionManagement
+        //2. for when opened from transactionManagement
         homeFormName = formName;
 
         // load data into table when form opens

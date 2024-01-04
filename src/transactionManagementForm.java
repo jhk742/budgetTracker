@@ -52,12 +52,7 @@ public class transactionManagementForm extends JDialog {
                 comboBoxPaymentMethod.addItem("");
                 comboBoxPaymentMethod.addItem("Card");
                 comboBoxPaymentMethod.addItem("Cash");
-                txtDescription.setEnabled(false);
-                txtAmount.setEnabled(false);
-                comboBoxCategory.setEnabled(false);
-                txtRunningBalance.setEnabled(false);
-                comboBoxPaymentMethod.setEnabled(false);
-                txtLocation.setEnabled(false);
+                setFieldsEnabledFalse();
             }
         });
 
@@ -70,6 +65,9 @@ public class transactionManagementForm extends JDialog {
             String selectedOption = (String) comboBoxType.getSelectedItem();
             txtDescription.setEnabled(true);
             txtAmount.setEnabled(true);
+            if (selectedOption.isEmpty()) {
+                setFieldsEnabledFalse();
+            }
             if (selectedOption.equals("Expense")) {
                 toggleFields("Expense", comps);
                 //so that everytime the type is changed, redundant values aren't added to the combobox
@@ -90,7 +88,7 @@ public class transactionManagementForm extends JDialog {
                 toggleFields("Income", comps);
             }
         });
-        
+
         btnSubmit.addActionListener(e -> {
             String option = String.valueOf(comboBoxType.getSelectedItem());
             boolean validationStatus = authenticateFields(option);
@@ -196,7 +194,16 @@ public class transactionManagementForm extends JDialog {
         });
     }
 
-    public void getLoggedUserTotalBalance(loggedUser loggedU) {
+    private void setFieldsEnabledFalse() {
+        txtDescription.setEnabled(false);
+        txtAmount.setEnabled(false);
+        comboBoxCategory.setEnabled(false);
+        txtRunningBalance.setEnabled(false);
+        comboBoxPaymentMethod.setEnabled(false);
+        txtLocation.setEnabled(false);
+    }
+
+    private void getLoggedUserTotalBalance(loggedUser loggedU) {
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("select * from bank_accounts where user_id=?");
@@ -212,13 +219,13 @@ public class transactionManagementForm extends JDialog {
         }
     }
 
-    public void toggleFields(String option, ArrayList<JComponent> comps) {
+    private void toggleFields(String option, ArrayList<JComponent> comps) {
         for (JComponent comp : comps) {
             comp.setEnabled(option.equals("Income") ? false : true);
         }
     }
 
-    public boolean authenticateFields(String option) {
+    private boolean authenticateFields(String option) {
         if (!txtDescription.getText().equals("") && !txtAmount.getText().equals("") && !txtRunningBalance.getText().equals("")) {
             if (option.equals("Income")) {
                 return true;
@@ -232,7 +239,7 @@ public class transactionManagementForm extends JDialog {
         return false;
     }
 
-    public static int getCategoryIdByName(JComboBox comboBox) {
+    private static int getCategoryIdByName(JComboBox comboBox) {
         String categoryName = String.valueOf(comboBox.getSelectedItem());
         try {
             Connection con = ConnectionProvider.getCon();
@@ -250,7 +257,7 @@ public class transactionManagementForm extends JDialog {
         return -1;
     }
 
-    public static void updateBankAccount(String option, loggedUser loggedU, BigDecimal amount) {
+    private static void updateBankAccount(String option, loggedUser loggedU, BigDecimal amount) {
         try {
             Connection con = ConnectionProvider.getCon();
             String updateQuery = "update bank_accounts set account_balance = "
@@ -268,7 +275,7 @@ public class transactionManagementForm extends JDialog {
         }
     }
 
-    public void resetFields() {
+    private void resetFields() {
         comboBoxType.setSelectedIndex(0);
         txtDescription.setText("");
         txtAmount.setText("");
