@@ -13,6 +13,7 @@ public class homeForm extends JDialog {
     private JLabel txtUserName;
     private JButton btnCategories;
     private JButton btnCharts;
+    private JButton btnCurrencyExchange;
 
     public homeForm(JFrame parent, loggedUser loggedU) {
         super(parent);
