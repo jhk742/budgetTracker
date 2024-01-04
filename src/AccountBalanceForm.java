@@ -215,6 +215,7 @@ public class AccountBalanceForm extends JDialog {
                 }
             }
         });
+        
         incomeDateRangeConfirmBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -226,6 +227,7 @@ public class AccountBalanceForm extends JDialog {
                 }
             }
         });
+
         expenseDateRangeConfirmBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -330,6 +332,7 @@ public class AccountBalanceForm extends JDialog {
             }
         }
     }
+
     private void getLoggedUserTotalBalance(loggedUser loggedU) {
         try {
             Connection con = ConnectionProvider.getCon();
