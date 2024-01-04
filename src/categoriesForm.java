@@ -19,7 +19,10 @@ public class categoriesForm extends JDialog {
     private JButton btnAdd;
     private JButton btnBack;
 
-    public categoriesForm(JFrame parent, loggedUser loggedU) {
+    //1. reference to the transactionManagementForm when opened within the txManagementForm
+    private String homeFormName;
+
+    public categoriesForm(JFrame parent, loggedUser loggedU, String formName) {
         super(parent);
         setTitle("Categories");
         setContentPane(categoriesForm);
@@ -27,6 +30,9 @@ public class categoriesForm extends JDialog {
         setModal(true);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        //2. when opened from transactionManagement
+        homeFormName = formName;
 
         // load data into table when form opens
         addWindowListener(new WindowAdapter() {
@@ -36,33 +42,33 @@ public class categoriesForm extends JDialog {
             }
         });
 
-        btnBack.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
+        btnBack.addActionListener(e -> {
+            dispose();
+            if (homeFormName.equals("transactionManagementForm")) {
+                transactionManagementForm tmf = new transactionManagementForm(null, loggedU);
+                tmf.setVisible(true);
+            } else {
                 homeForm hf = new homeForm(null, loggedU);
                 hf.setVisible(true);
             }
+
         });
 
-        btnAdd.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String name = txtCategoryName.getText();
-                String description = txtCategoryDescription.getText();
-                try {
-                    Connection con = ConnectionProvider.getCon();
-                    PreparedStatement ps = con.prepareStatement("insert into categories (name, description) values (?, ?)");
-                    ps.setString(1, name);
-                    ps.setString(2, description);
-                    int affectedRows = ps.executeUpdate();
-                    if (affectedRows > 0) {
-                        JOptionPane.showMessageDialog(null, "Successfully created category: " + name);
-                        populateTable(tableCategories);
-                    }
-                } catch (Exception er) {
-                    JOptionPane.showMessageDialog(null, "Error trying to create new category.");
+        btnAdd.addActionListener(e -> {
+            String name = txtCategoryName.getText();
+            String description = txtCategoryDescription.getText();
+            try {
+                Connection con = ConnectionProvider.getCon();
+                PreparedStatement ps = con.prepareStatement("insert into categories (name, description) values (?, ?)");
+                ps.setString(1, name);
+                ps.setString(2, description);
+                int affectedRows = ps.executeUpdate();
+                if (affectedRows > 0) {
+                    JOptionPane.showMessageDialog(null, "Successfully created category: " + name);
+                    populateTable(tableCategories);
                 }
+            } catch (Exception er) {
+                JOptionPane.showMessageDialog(null, "Error trying to create new category.");
             }
         });
     }

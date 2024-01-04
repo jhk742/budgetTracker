@@ -1,7 +1,6 @@
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.xml.transform.Result;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -29,6 +28,7 @@ public class transactionManagementForm extends JDialog {
     private JButton btnBack;
     private JButton btnReset;
     private JLabel lblTotalBalance;
+    private JButton btnAddCategory;
 
     public transactionManagementForm(JFrame parent, loggedUser loggedU) {
         super(parent);
@@ -62,108 +62,104 @@ public class transactionManagementForm extends JDialog {
         });
 
 
-        comboBoxType.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ArrayList<JComponent> comps = new ArrayList<>();
-                comps.add(comboBoxCategory);
-                comps.add(comboBoxPaymentMethod);
-                comps.add(txtLocation);
-                String selectedOption = (String) comboBoxType.getSelectedItem();
-                txtDescription.setEnabled(true);
-                txtAmount.setEnabled(true);
-                if (selectedOption.equals("Expense")) {
-                    toggleFields("Expense", comps);
-                    //so that everytime the type is changed, redundant values aren't added to the combobox
-                    comboBoxCategory.removeAllItems();
-                    comboBoxCategory.addItem("");
+        comboBoxType.addActionListener(e -> {
+            ArrayList<JComponent> comps = new ArrayList<>();
+            comps.add(comboBoxCategory);
+            comps.add(comboBoxPaymentMethod);
+            comps.add(txtLocation);
+            String selectedOption = (String) comboBoxType.getSelectedItem();
+            txtDescription.setEnabled(true);
+            txtAmount.setEnabled(true);
+            if (selectedOption.equals("Expense")) {
+                toggleFields("Expense", comps);
+                //so that everytime the type is changed, redundant values aren't added to the combobox
+                comboBoxCategory.removeAllItems();
+                comboBoxCategory.addItem("");
+                try {
+                    Connection con = ConnectionProvider.getCon();
+                    Statement st = con.createStatement();
+                    ResultSet rs = st.executeQuery("select name from categories");
+                    while (rs.next()) {
+                        comboBoxCategory.addItem(rs.getString("name"));
+                    }
+                } catch (Exception er) {
+                    JOptionPane.showMessageDialog(null, "Failed to retrieve category names.");
+                }
+            }
+            if (selectedOption.equals("Income")) {
+                toggleFields("Income", comps);
+            }
+        });
+        
+        btnSubmit.addActionListener(e -> {
+            String option = String.valueOf(comboBoxType.getSelectedItem());
+            boolean validationStatus = authenticateFields(option);
+            String description = txtDescription.getText();
+            BigDecimal amount = new BigDecimal(txtAmount.getText());
+            String runningBalance = txtRunningBalance.getText();
+            String type = String.valueOf(comboBoxType.getSelectedItem());
+            LocalDate currentDate = LocalDate.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String formattedDate = currentDate.format(formatter);
+            if(validationStatus) {
+                if (option.equals("Expense")) {
+                    // first retrieve the category id
+                    int categoryId = getCategoryIdByName(comboBoxCategory);
+                    String paymentMethod = String.valueOf(comboBoxPaymentMethod.getSelectedItem());
+                    String location = txtLocation.getText();
+                    // insert into transactions table
                     try {
                         Connection con = ConnectionProvider.getCon();
-                        Statement st = con.createStatement();
-                        ResultSet rs = st.executeQuery("select name from categories");
-                        while (rs.next()) {
-                            comboBoxCategory.addItem(rs.getString("name"));
+                        PreparedStatement ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, category_id, " +
+                                "type, account_id, running_balance, payment_method, location) " +
+                                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        ps.setString(1, formattedDate);
+                        ps.setString(2, description);
+                        ps.setBigDecimal(3, amount);
+                        ps.setInt(4, categoryId);
+                        ps.setString(5, type);
+                        ps.setInt(6, Integer.parseInt(loggedU.id));
+                        ps.setBigDecimal(7, new BigDecimal(runningBalance));
+                        ps.setString(8, paymentMethod);
+                        ps.setString(9, location);
+                        int rowsAffectedTransaction = ps.executeUpdate();
+                        if (rowsAffectedTransaction > 0) {
+                            updateBankAccount("Expense", loggedU, amount);
+                        }
+                        //update bank_accounts table
+                    } catch (Exception er) {
+                        JOptionPane.showMessageDialog(null, "Error trying to create transaction.");
+                    }
+
+                }
+                if (option.equals("Income")) {
+                    try {
+                        Connection con = ConnectionProvider.getCon();
+                        PreparedStatement ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, " +
+                                "type, account_id, running_balance) " +
+                                "VALUES (?, ?, ?, ?, ?, ?)");
+                        ps.setString(1, formattedDate);
+                        ps.setString(2, description);
+                        ps.setBigDecimal(3, amount);
+                        ps.setString(4, type);
+                        ps.setInt(5, Integer.parseInt(loggedU.id));
+                        ps.setBigDecimal(6, new BigDecimal(runningBalance));
+                        int rowsAffectedTransaction = ps.executeUpdate();
+                        if (rowsAffectedTransaction > 0) {
+                            updateBankAccount("Income", loggedU, amount);
                         }
                     } catch (Exception er) {
-                        JOptionPane.showMessageDialog(null, "Failed to retrieve category names.");
+                        JOptionPane.showMessageDialog(null, "Error trying to create transaction.");
                     }
                 }
-                if (selectedOption.equals("Income")) {
-                    toggleFields("Income", comps);
-                }
+                //update to show new balance and reset all other fields to default (blanks)
+                getLoggedUserTotalBalance(loggedU);
+                resetFields();
+            } else {
+                JOptionPane.showMessageDialog(null, "All fields are required.");
             }
         });
-        btnSubmit.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String option = String.valueOf(comboBoxType.getSelectedItem());
-                boolean validationStatus = authenticateFields(option);
-                String description = txtDescription.getText();
-                BigDecimal amount = new BigDecimal(txtAmount.getText());
-                String runningBalance = txtRunningBalance.getText();
-                String type = String.valueOf(comboBoxType.getSelectedItem());
-                LocalDate currentDate = LocalDate.now();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                String formattedDate = currentDate.format(formatter);
-                if(validationStatus) {
-                    if (option.equals("Expense")) {
-                        // first retrieve the category id
-                        int categoryId = getCategoryIdByName(comboBoxCategory);
-                        String paymentMethod = String.valueOf(comboBoxPaymentMethod.getSelectedItem());
-                        String location = txtLocation.getText();
-                        // insert into transactions table
-                        try {
-                            Connection con = ConnectionProvider.getCon();
-                            PreparedStatement ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, category_id, " +
-                                    "type, account_id, running_balance, payment_method, location) " +
-                                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                            ps.setString(1, formattedDate);
-                            ps.setString(2, description);
-                            ps.setBigDecimal(3, amount);
-                            ps.setInt(4, categoryId);
-                            ps.setString(5, type);
-                            ps.setInt(6, Integer.parseInt(loggedU.id));
-                            ps.setBigDecimal(7, new BigDecimal(runningBalance));
-                            ps.setString(8, paymentMethod);
-                            ps.setString(9, location);
-                            int rowsAffectedTransaction = ps.executeUpdate();
-                            if (rowsAffectedTransaction > 0) {
-                                updateBankAccount("Expense", loggedU, amount);
-                            }
-                            //update bank_accounts table
-                        } catch (Exception er) {
-                            JOptionPane.showMessageDialog(null, "Error trying to create transaction.");
-                        }
 
-                    }
-                    if (option.equals("Income")) {
-                        try {
-                            Connection con = ConnectionProvider.getCon();
-                            PreparedStatement ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, " +
-                                    "type, account_id, running_balance) " +
-                                    "VALUES (?, ?, ?, ?, ?, ?)");
-                            ps.setString(1, formattedDate);
-                            ps.setString(2, description);
-                            ps.setBigDecimal(3, amount);
-                            ps.setString(4, type);
-                            ps.setInt(5, Integer.parseInt(loggedU.id));
-                            ps.setBigDecimal(6, new BigDecimal(runningBalance));
-                            int rowsAffectedTransaction = ps.executeUpdate();
-                            if (rowsAffectedTransaction > 0) {
-                                updateBankAccount("Income", loggedU, amount);
-                            }
-                        } catch (Exception er) {
-                            JOptionPane.showMessageDialog(null, "Error trying to create transaction.");
-                        }
-                    }
-                    //update to show new balance and reset all other fields to default (blanks)
-                    getLoggedUserTotalBalance(loggedU);
-                    resetFields();
-                } else {
-                    JOptionPane.showMessageDialog(null, "All fields are required.");
-                }
-            }
-        });
         txtAmount.getDocument().addDocumentListener(new DocumentListener() {
             //to update the running balance txtfield when a input is provided for amount
             @Override
@@ -183,19 +179,20 @@ public class transactionManagementForm extends JDialog {
             public void changedUpdate(DocumentEvent e) {
             }
         });
-        btnReset.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                resetFields();
-            }
+
+        btnReset.addActionListener(e -> resetFields());
+
+        btnBack.addActionListener(e -> {
+            dispose();
+            homeForm hf = new homeForm(null, loggedU);
+            hf.setVisible(true);
         });
-        btnBack.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-                homeForm hf = new homeForm(null, loggedU);
-                hf.setVisible(true);
-            }
+
+        btnAddCategory.addActionListener(e -> {
+            dispose();
+            //send in the name of this form so when the back btn is pressed within the category form, it shows this form and not home
+            categoriesForm cf = new categoriesForm(null, loggedU, "transactionManagementForm");
+            cf.setVisible(true);
         });
     }
 

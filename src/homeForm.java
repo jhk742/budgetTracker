@@ -67,7 +67,7 @@ public class homeForm extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                categoriesForm cf = new categoriesForm(null, loggedU);
+                categoriesForm cf = new categoriesForm(null, loggedU, "");
                 cf.setVisible(true);
             }
         });
