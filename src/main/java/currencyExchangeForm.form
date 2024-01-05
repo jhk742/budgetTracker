@@ -97,17 +97,9 @@
             <properties/>
             <border type="none"/>
             <children>
-              <component id="7edf6" class="javax.swing.JButton" binding="btnClear">
-                <constraints>
-                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="Clear"/>
-                </properties>
-              </component>
               <component id="79783" class="javax.swing.JButton" binding="btnCalculate">
                 <constraints>
-                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Calculate"/>
@@ -119,6 +111,14 @@
                 </constraints>
                 <properties>
                   <text value="Back"/>
+                </properties>
+              </component>
+              <component id="7edf6" class="javax.swing.JButton" binding="btnClear">
+                <constraints>
+                  <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="Clear"/>
                 </properties>
               </component>
             </children>

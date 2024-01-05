@@ -1,4 +1,5 @@
 import Connectors.HttpProvider;
+import Users.loggedUser;
 import org.json.JSONObject;
 
 import javax.swing.*;
@@ -22,20 +23,22 @@ public class currencyExchangeForm extends JDialog {
     private JTextPane txtPaneAnswer;
     private JButton btnBack;
 
-    public currencyExchangeForm(JFrame parent) {
+    public currencyExchangeForm(JFrame parent, loggedUser loggedU) {
         super(parent);
         setTitle("Login");
         setContentPane(currencyExchangeFormPanel);
-        setMinimumSize(new Dimension(1500, 800));
+        setMinimumSize(new Dimension(500, 450));
         setModal(true);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         initializeUI();
         btnClear.addActionListener(e -> {
             txtValue.setText("");
+            txtPaneAnswer.setText("");
             comboBoxFrom.setSelectedIndex(0);
             comboBoxTo.setSelectedIndex(0);
         });
+
         btnCalculate.addActionListener(e -> {
             String value = txtValue.getText();
             String targetCurrency = String.valueOf(comboBoxFrom.getSelectedItem()).substring(0, 3);
@@ -46,6 +49,24 @@ public class currencyExchangeForm extends JDialog {
             BigDecimal conversionResult = json.getBigDecimal("conversion_result");
             BigDecimal conversionRate = json.getBigDecimal("conversion_rate");
             System.out.println(Double.valueOf(value) + " " + targetCurrency + " = " + conversionResult + " " + comparedCurrency + "\n1 " + targetCurrency + " = " + conversionRate + " " + comparedCurrency);
+            txtPaneAnswer.setContentType("text/html");
+            String htmlContent =
+                    "<html>" +
+                        "<div style='text-align:center;'>" +
+                            "<p> Answer:" +
+                            "<br>" +
+                            Double.valueOf(value) + " " + targetCurrency + " = " + conversionResult + " " + comparedCurrency + "<br>" +
+                            "1 " + targetCurrency + " = " + conversionRate + " " + comparedCurrency +
+                            "</p>" +
+                        "</div>" +
+                    "</html>";
+            txtPaneAnswer.setText(htmlContent);
+        });
+
+        btnBack.addActionListener(e -> {
+            dispose();
+            homeForm hf = new homeForm(null, loggedU);
+            hf.setVisible(true);
         });
     }
 

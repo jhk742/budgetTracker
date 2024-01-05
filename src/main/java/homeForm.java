@@ -86,7 +86,7 @@ public class homeForm extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                currencyExchangeForm cef = new currencyExchangeForm(null);
+                currencyExchangeForm cef = new currencyExchangeForm(null, loggedU);
                 cef.setVisible(true);
             }
         });
