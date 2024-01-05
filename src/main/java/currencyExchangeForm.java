@@ -52,10 +52,14 @@ public class currencyExchangeForm extends JDialog {
             txtPaneAnswer.setContentType("text/html");
             String htmlContent =
                     "<html>" +
+                        "<div>" +
+                            "<span> " +
+                                "Answer: " +
+                            "</span>" +
+                        "</div>" +
                         "<div style='text-align:center;'>" +
-                            "<p> Answer:" +
-                            "<br>" +
-                            Double.valueOf(value) + " " + targetCurrency + " = " + conversionResult + " " + comparedCurrency + "<br>" +
+                            "<p>" +
+                            "<strong>" + Double.valueOf(value) + "</strong> " + targetCurrency + " = <strong>" + conversionResult + "</strong> " + comparedCurrency + "<br>" +
                             "1 " + targetCurrency + " = " + conversionRate + " " + comparedCurrency +
                             "</p>" +
                         "</div>" +
