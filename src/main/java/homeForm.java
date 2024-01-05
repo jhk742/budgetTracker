@@ -82,5 +82,13 @@ public class homeForm extends JDialog {
                 c.setVisible(true);
             }
         });
+        btnCurrencyExchange.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+                currencyExchangeForm cef = new currencyExchangeForm(null);
+                cef.setVisible(true);
+            }
+        });
     }
 }

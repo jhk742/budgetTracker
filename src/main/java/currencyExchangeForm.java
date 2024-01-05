@@ -27,6 +27,7 @@ public class currencyExchangeForm extends JDialog {
         setModal(true);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        initializeUI();
     }
 
     private void getExchangeRate(String url, String targetCurrency, String comparedCurrency, int amount) {
@@ -41,6 +42,9 @@ public class currencyExchangeForm extends JDialog {
 
     private void initializeUI() {
         Map<String, String> currencies = Utility.CurrencyScraper.getCurrencies();
-        
+        for (Map.Entry<String, String> entry : currencies.entrySet()) {
+            comboBoxFrom.addItem(entry.getKey() + " - " + entry.getValue());
+            comboBoxTo.addItem(entry.getKey() + " - " + entry.getValue());
+        }
     }
 }

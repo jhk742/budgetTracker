@@ -406,7 +406,7 @@ public class AccountBalanceForm extends JDialog {
                         "\ttransactions t\n" +
                         "LEFT JOIN\n" +
                         "\tcategories c ON t.category_id = c.category_id\n" +
-                        "WHERE t.account_id = ? AND (t.type='Expense' OR t.category_id IS NULL) AND t.date IN (?, ?)");
+                        "WHERE t.account_id = ? AND (t.type='Expense' OR t.category_id IS NULL) AND t.date BETWEEN ? AND ?");
                 ps.setString(1, loggedU.id);
                 ps.setString(2, startDate);
                 ps.setString(3, endDate);
@@ -463,7 +463,7 @@ public class AccountBalanceForm extends JDialog {
                 ps = con.prepareStatement("SELECT amount, type, running_balance, date " +
                         "FROM transactions\n" +
                         "WHERE\n" +
-                        "type = 'Income' AND account_id = ? AND date IN (?, ?)");
+                        "type = 'Income' AND account_id = ? AND date BETWEEN ? AND ?");
                 ps.setString(1, loggedU.id);
                 ps.setString(2, startDate);
                 ps.setString(3, endDate);
@@ -522,7 +522,7 @@ public class AccountBalanceForm extends JDialog {
                         "FROM transactions t\n" +
                         "INNER JOIN categories c ON t.category_id = c.category_id\n" +
                         "WHERE t.type = 'Expense'\n" +
-                        "AND t.account_id = ? AND t.date IN (?, ?)");
+                        "AND t.account_id = ? AND t.date BETWEEN ? AND ?");
                 ps.setString(1, loggedU.id);
                 ps.setString(2, startDate);
                 ps.setString(3, endDate);
