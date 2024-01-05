@@ -20,7 +20,6 @@ public class CurrencyScraper {
             Elements tables = doc.select("table");
             if (tables.size() >= 3) {
                 Element secondTable = tables.get(2); // Index 1 corresponds to the second table
-                System.out.println(secondTable);
                 // ":gt(0)" selects rows starting from the second row
                 Elements rows = secondTable.select("tbody > tr:gt(0)");
 

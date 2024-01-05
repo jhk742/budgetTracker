@@ -1,9 +1,10 @@
 import Connectors.HttpProvider;
-import Utility.CurrencyScraper;
 import org.json.JSONObject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Map;
 
@@ -18,6 +19,7 @@ public class currencyExchangeForm extends JDialog {
     private JButton btnClear;
     private JButton btnCalculate;
     private JTextPane txtPaneAnswer;
+    private JButton btnBack;
 
     public currencyExchangeForm(JFrame parent) {
         super(parent);
@@ -28,13 +30,25 @@ public class currencyExchangeForm extends JDialog {
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         initializeUI();
+        btnClear.addActionListener(e -> {
+            txtValue.setText("");
+            comboBoxFrom.setSelectedIndex(0);
+            comboBoxTo.setSelectedIndex(0);
+        });
+        btnCalculate.addActionListener(e -> {
+            String value = txtValue.getText();
+            String targetCurrency = String.valueOf(comboBoxFrom.getSelectedItem()).substring(0, 3);
+            String comparedCurrency = String.valueOf(comboBoxTo.getSelectedItem()).substring(0, 3);
+            getExchangeRate(targetCurrency, comparedCurrency, value);
+        });
     }
 
-    private void getExchangeRate(String url, String targetCurrency, String comparedCurrency, int amount) {
+    private void getExchangeRate(String targetCurrency, String comparedCurrency, String amount) {
         String pairUrl = url + "/pair/" + targetCurrency + "/" + comparedCurrency + "/" + amount;
+        System.out.println(pairUrl);
         try {
             JSONObject jsonObj = httpProvider.executeRequest(pairUrl);
-
+            System.out.println(jsonObj);
         } catch(IOException e) {
 
         }
@@ -42,6 +56,9 @@ public class currencyExchangeForm extends JDialog {
 
     private void initializeUI() {
         Map<String, String> currencies = Utility.CurrencyScraper.getCurrencies();
+        String selectCurrencyplaceHolder = "--- Select Currency ---";
+        comboBoxFrom.addItem(selectCurrencyplaceHolder);
+        comboBoxTo.addItem(selectCurrencyplaceHolder);
         for (Map.Entry<String, String> entry : currencies.entrySet()) {
             comboBoxFrom.addItem(entry.getKey() + " - " + entry.getValue());
             comboBoxTo.addItem(entry.getKey() + " - " + entry.getValue());
