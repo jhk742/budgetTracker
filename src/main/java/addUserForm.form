@@ -152,7 +152,7 @@
         </constraints>
         <properties>
           <font size="22" style="1"/>
-          <text value="Add User"/>
+          <text value="Add Users.User"/>
         </properties>
       </component>
       <grid id="33d9a" layout-manager="GridLayoutManager" row-count="1" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">

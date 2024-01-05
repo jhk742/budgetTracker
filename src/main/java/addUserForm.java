@@ -1,3 +1,6 @@
+import Connectors.ConnectionProvider;
+import Users.loggedUser;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -75,7 +78,7 @@ public class addUserForm extends JDialog {
                                     psBalance.setBigDecimal(2, new BigDecimal(txtBalance.getText()));
                                     int rowsAffectedBankAccounts = psBalance.executeUpdate();
                                     if (rowsAffected > 0 && rowsAffectedBankAccounts > 0) {
-                                        JOptionPane.showMessageDialog(null, "User successfully created.");
+                                        JOptionPane.showMessageDialog(null, "Users.User successfully created.");
                                     }
                                 } catch (Exception er2) {
                                     System.out.println(er2);

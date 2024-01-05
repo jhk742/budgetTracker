@@ -1,3 +1,7 @@
+import Connectors.ConnectionProvider;
+import Users.User;
+import Users.loggedUser;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -148,7 +152,7 @@ public class usersForm extends JDialog implements DataChangeListener {
                     ps.setString(4, passWord);
                     int rowsAffected = ps.executeUpdate();
                     if (rowsAffected > 0) {
-                        JOptionPane.showMessageDialog(null, "User successfully deleted.");
+                        JOptionPane.showMessageDialog(null, "Users.User successfully deleted.");
                         setVisible(false);
                         usersForm uf = new usersForm(null, loggedU);
                         uf.setVisible(true);

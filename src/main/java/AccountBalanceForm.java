@@ -1,3 +1,6 @@
+import Connectors.ConnectionProvider;
+import Users.loggedUser;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;

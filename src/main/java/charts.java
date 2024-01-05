@@ -1,3 +1,5 @@
+import Connectors.ConnectionProvider;
+import Users.loggedUser;
 import org.jfree.chart.*;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.PiePlot;

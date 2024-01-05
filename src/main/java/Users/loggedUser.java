@@ -1,3 +1,5 @@
+package Users;
+
 import java.math.BigDecimal;
 
 public class loggedUser {
