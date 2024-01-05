@@ -26,7 +26,7 @@ public class HttpProvider {
      to the formPage.
      */
 
-    public JSONObject executeRequest(String url) throws IOException {
+    public JSONObject executeGetRequest(String url) throws IOException {
         try {
             HttpGet httpGet = new HttpGet(url);
             HttpResponse response = httpClient.execute(httpGet);

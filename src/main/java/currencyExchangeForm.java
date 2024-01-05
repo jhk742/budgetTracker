@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Map;
 
 public class currencyExchangeForm extends JDialog {
@@ -39,19 +40,24 @@ public class currencyExchangeForm extends JDialog {
             String value = txtValue.getText();
             String targetCurrency = String.valueOf(comboBoxFrom.getSelectedItem()).substring(0, 3);
             String comparedCurrency = String.valueOf(comboBoxTo.getSelectedItem()).substring(0, 3);
-            getExchangeRate(targetCurrency, comparedCurrency, value);
+            JSONObject json = getExchangeRate(targetCurrency, comparedCurrency, value);
+            targetCurrency = json.getString("base_code");
+            comparedCurrency = json.getString("target_code");
+            BigDecimal conversionResult = json.getBigDecimal("conversion_result");
+            BigDecimal conversionRate = json.getBigDecimal("conversion_rate");
+            System.out.println(Double.valueOf(value) + " " + targetCurrency + " = " + conversionResult + " " + comparedCurrency + "\n1 " + targetCurrency + " = " + conversionRate + " " + comparedCurrency);
         });
     }
 
-    private void getExchangeRate(String targetCurrency, String comparedCurrency, String amount) {
+    private JSONObject getExchangeRate(String targetCurrency, String comparedCurrency, String amount) {
         String pairUrl = url + "/pair/" + targetCurrency + "/" + comparedCurrency + "/" + amount;
-        System.out.println(pairUrl);
         try {
-            JSONObject jsonObj = httpProvider.executeRequest(pairUrl);
-            System.out.println(jsonObj);
+            JSONObject jsonObj = httpProvider.executeGetRequest(pairUrl);
+            return jsonObj;
         } catch(IOException e) {
 
         }
+        return null;
     }
 
     private void initializeUI() {
