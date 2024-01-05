@@ -3,7 +3,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +12,7 @@ public class CurrencyScraper {
     public static Map<String, String> getCurrencies() {
         Map<String, String> retCurrencies = new HashMap<>();
         try {
-            // Replace the URL with the actual URL of the page containing the table
+            //URL of the page containing the data we want to scrape
             Document doc = Jsoup.connect("https://www.exchangerate-api.com/docs/supported-currencies").get();
 
             // Select the second table on the page
@@ -26,12 +25,12 @@ public class CurrencyScraper {
                 // Iterate over the rows in the tbody
                 for (Element row : rows) {
                     // Extract data from each cell in the row
-                    Elements cells = row.select("td:lt(2)"); // ":lt(2)" selects the first two cells in the row
+                    // ":lt(2)" selects the first two cells in the row
+                    Elements cells = row.select("td:lt(2)");
                     if (cells.size() >= 2) {
                         String key = cells.get(0).text();
                         String value = cells.get(1).text();
                         retCurrencies.put(key, value);
-
                     }
                 }
                 return retCurrencies;
