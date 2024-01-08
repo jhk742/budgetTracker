@@ -4,3 +4,4 @@ out/
 .idea/
 target/
 !**/src/main/**/out/
+!**/src/test/**/out/

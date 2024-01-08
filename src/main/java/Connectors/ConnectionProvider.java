@@ -21,7 +21,4 @@ public class ConnectionProvider {
             throw e;
         }
     }
-
-
-
 }
