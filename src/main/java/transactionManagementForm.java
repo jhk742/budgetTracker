@@ -207,8 +207,8 @@ public class transactionManagementForm extends JDialog {
                 loggedU.totalBalance = balance;
                 lblTotalBalance.setText(String.valueOf(loggedU.totalBalance));
             }
-        } catch (Exception er) {
-            System.out.println(er);
+        } catch (SQLException er) {
+            ExceptionHandler.unableToConnectToDb(er);
         }
     }
 
@@ -243,9 +243,8 @@ public class transactionManagementForm extends JDialog {
                 int id = rs.getInt("category_id");
                 return id;
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "That category does not exist.");
-            System.out.println(e);
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
         return -1;
     }
@@ -263,8 +262,8 @@ public class transactionManagementForm extends JDialog {
             if (rowsAffectedBankAccount > 0) {
                 JOptionPane.showMessageDialog(null, "Transaction created successfully!");
             }
-        } catch (Exception er2) {
-            JOptionPane.showMessageDialog(null, "Error while trying to update user's Bank Account information.");
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
     }
 
