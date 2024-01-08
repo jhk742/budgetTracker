@@ -17,7 +17,7 @@
 
     <!-- Test Directory -->
     <build>
-        <testSourceDirectory>/src/test/javaTest</testSourceDirectory>
+        <testSourceDirectory>/src/test/java</testSourceDirectory>
     </build>
 
     <dependencies>
@@ -56,6 +56,15 @@
             <artifactId>jfreechart</artifactId>
             <version>1.5.3</version>
         </dependency>
+
+        <!-- JUnit -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version> <!-- or the latest version available -->
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
     
 </project>
