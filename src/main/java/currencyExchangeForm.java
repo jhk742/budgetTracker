@@ -1,6 +1,7 @@
 import Connectors.HttpProvider;
 import Users.loggedUser;
 import org.json.JSONObject;
+import ExceptionHandler.ExceptionHandler;
 
 import javax.swing.*;
 import java.awt.*;
@@ -40,31 +41,34 @@ public class currencyExchangeForm extends JDialog {
         });
 
         btnCalculate.addActionListener(e -> {
-            String value = txtValue.getText();
-            String targetCurrency = String.valueOf(comboBoxFrom.getSelectedItem()).substring(0, 3);
-            String comparedCurrency = String.valueOf(comboBoxTo.getSelectedItem()).substring(0, 3);
-            JSONObject json = getExchangeRate(targetCurrency, comparedCurrency, value);
-            targetCurrency = json.getString("base_code");
-            comparedCurrency = json.getString("target_code");
-            BigDecimal conversionResult = json.getBigDecimal("conversion_result");
-            BigDecimal conversionRate = json.getBigDecimal("conversion_rate");
-            System.out.println(Double.valueOf(value) + " " + targetCurrency + " = " + conversionResult + " " + comparedCurrency + "\n1 " + targetCurrency + " = " + conversionRate + " " + comparedCurrency);
-            txtPaneAnswer.setContentType("text/html");
-            String htmlContent =
-                    "<html>" +
-                        "<div>" +
-                            "<span> " +
+            try {
+                String value = txtValue.getText();
+                String targetCurrency = String.valueOf(comboBoxFrom.getSelectedItem()).substring(0, 3);
+                String comparedCurrency = String.valueOf(comboBoxTo.getSelectedItem()).substring(0, 3);
+                JSONObject json = getExchangeRate(targetCurrency, comparedCurrency, value);
+                targetCurrency = json.getString("base_code");
+                comparedCurrency = json.getString("target_code");
+                BigDecimal conversionResult = json.getBigDecimal("conversion_result");
+                BigDecimal conversionRate = json.getBigDecimal("conversion_rate");
+                txtPaneAnswer.setContentType("text/html");
+                String htmlContent =
+                        "<html>" +
+                                "<div>" +
+                                "<span> " +
                                 "Answer: " +
-                            "</span>" +
-                        "</div>" +
-                        "<div style='text-align:center;'>" +
-                            "<p>" +
-                            "<strong>" + Double.valueOf(value) + "</strong> " + targetCurrency + " = <strong>" + conversionResult + "</strong> " + comparedCurrency + "<br>" +
-                            "1 " + targetCurrency + " = " + conversionRate + " " + comparedCurrency +
-                            "</p>" +
-                        "</div>" +
-                    "</html>";
-            txtPaneAnswer.setText(htmlContent);
+                                "</span>" +
+                                "</div>" +
+                                "<div style='text-align:center;'>" +
+                                "<p>" +
+                                "<strong>" + Double.valueOf(value) + "</strong> " + targetCurrency + " = <strong>" + conversionResult + "</strong> " + comparedCurrency + "<br>" +
+                                "1 " + targetCurrency + " = " + conversionRate + " " + comparedCurrency +
+                                "</p>" +
+                                "</div>" +
+                                "</html>";
+                txtPaneAnswer.setText(htmlContent);
+            } catch (IOException er) {
+                ExceptionHandler.httpError(er);
+            }
         });
 
         btnBack.addActionListener(e -> {
@@ -74,15 +78,10 @@ public class currencyExchangeForm extends JDialog {
         });
     }
 
-    private JSONObject getExchangeRate(String targetCurrency, String comparedCurrency, String amount) {
+    private JSONObject getExchangeRate(String targetCurrency, String comparedCurrency, String amount) throws IOException {
         String pairUrl = url + "/pair/" + targetCurrency + "/" + comparedCurrency + "/" + amount;
-        try {
-            JSONObject jsonObj = httpProvider.executeGetRequest(pairUrl);
-            return jsonObj;
-        } catch(IOException e) {
-
-        }
-        return null;
+        JSONObject jsonObj = httpProvider.executeGetRequest(pairUrl);
+        return jsonObj;
     }
 
     private void initializeUI() {
