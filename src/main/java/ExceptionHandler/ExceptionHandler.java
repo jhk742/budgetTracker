@@ -48,7 +48,6 @@ public class ExceptionHandler {
     }
 
     public static void httpError(IOException message) {
-//        int statusCode = Integer.valueOf(message.getMessage().split(":")[1].substring(1));
         int statusCode = Integer.valueOf(message.getMessage());
         if (statusCode == 404) {
             JOptionPane.showMessageDialog(null, "The server could not find the requested resource.\nStatus Code: " + statusCode);

@@ -130,7 +130,7 @@ public class usersForm extends JDialog implements DataChangeListener {
         //create and add a user
         btnAdd.addActionListener(e -> {
             //pass in the reference to the form itself (JFrom.this) as
-            //it implemetns the dataChangeListener. Once a new user is added,
+            //it implements the dataChangeListener. Once a new user is added,
             //the onDataChange method is invoked to repopulate the jtable to
             //reflect the change=(addition of a new user).
             addUserForm auf = new addUserForm(usersForm.this, loggedU);
