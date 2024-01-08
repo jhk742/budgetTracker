@@ -62,7 +62,7 @@ public class loginForm extends JDialog {
                     }
                 } catch (DatabaseConnectionException dex) {
                     SQLException originalException = (SQLException) dex.getCause();
-                    System.out.println("OG: " + originalException);
+//                    System.out.println("OG: " + originalException);
 //                    if (originalException != null) {
 //                        System.out.println(dex.getMessage());
 //                        // Access details from the original SQLException if needed

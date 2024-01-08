@@ -1,15 +1,13 @@
 import Connectors.ConnectionProvider;
 import Users.loggedUser;
+import ExceptionHandler.ExceptionHandler;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 
 public class categoriesForm extends JDialog {
 
@@ -39,7 +37,11 @@ public class categoriesForm extends JDialog {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
-                populateTable(tableCategories);
+                try {
+                    populateTable(tableCategories);
+                } catch (SQLException er) {
+                    ExceptionHandler.unableToConnectToDb(er);
+                }
             }
         });
 
@@ -68,13 +70,13 @@ public class categoriesForm extends JDialog {
                     JOptionPane.showMessageDialog(null, "Successfully created category: " + name);
                     populateTable(tableCategories);
                 }
-            } catch (Exception er) {
-                JOptionPane.showMessageDialog(null, "Error trying to create new category.");
+            } catch (SQLException ex) {
+                ExceptionHandler.unableToConnectToDb(ex);
             }
         });
     }
 
-    public static void populateTable(JTable tableCategories) {
+    public static void populateTable(JTable tableCategories) throws SQLException {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"ID", "Name", "Description"},0
         );
@@ -86,8 +88,8 @@ public class categoriesForm extends JDialog {
             while (rs.next()) {
                 model.addRow(new Object[]{rs.getString("category_id"), rs.getString("name"), rs.getString("description")});
             }
-        } catch(Exception x) {
-            JOptionPane.showMessageDialog(null, x);
+        } catch(SQLException x) {
+            throw new SQLException(x);
         }
     }
 }

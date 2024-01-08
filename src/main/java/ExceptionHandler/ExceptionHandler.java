@@ -26,7 +26,7 @@ public class ExceptionHandler {
         }
         //communications link failure
         if (errorCode == 0) {
-            JOptionPane.showMessageDialog(null, connectionDefaultMessage + e.getMessage().substring(110, e.getMessage().length() - 1) + "\nVendor Code: " + errorCode);
+            JOptionPane.showMessageDialog(null, connectionDefaultMessage + e.getMessage().substring(e.getMessage().indexOf(":") + 2) + "\nVendor Code: " + errorCode);
         }
         //unknown table
         if (errorCode == 1146) {

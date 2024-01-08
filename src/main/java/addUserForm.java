@@ -96,7 +96,7 @@ public class addUserForm extends JDialog {
                 }
             }
         });
-        
+
         btnCancel.addActionListener(e -> dispose());
     }
 
