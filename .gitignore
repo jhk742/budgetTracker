@@ -1,6 +1,6 @@
 ### IntelliJ IDEA ###
+budgetTracker.iml
 out/
 .idea/
 target/
 !**/src/main/**/out/
-!**/src/test/**/out/
