@@ -1,5 +1,6 @@
 import Connectors.ConnectionProvider;
 import Users.loggedUser;
+import ExceptionHandler.ExceptionHandler;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -8,6 +9,7 @@ import java.awt.event.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
@@ -49,12 +51,12 @@ public class AccountBalanceForm extends JDialog {
     }};
     private final ArrayList<JTextField> dateRangeTxtFields = new ArrayList<>(
             Arrays.asList(
-                    txtTotalStartDate,
-                    txtTotalEndDate,
-                    txtIncomeStartDate,
-                    txtIncomeEndDate,
-                    txtExpenseStartDate,
-                    txtExpenseEndDate
+                txtTotalStartDate,
+                txtTotalEndDate,
+                txtIncomeStartDate,
+                txtIncomeEndDate,
+                txtExpenseStartDate,
+                txtExpenseEndDate
             )
     );
 
@@ -75,7 +77,6 @@ public class AccountBalanceForm extends JDialog {
         setModal(true);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -219,19 +220,18 @@ public class AccountBalanceForm extends JDialog {
                 LocalDate start = LocalDate.parse(startDate);
                 LocalDate end = LocalDate.parse(endDate);
                 if (end.isBefore(start)) {
-                    JOptionPane.showMessageDialog(null, "Error: The start date cannot be after the end date. Please select a valid date range.");
-                    //revert text back to placeholder
-                    toggleDateRangePlaceHolder();
-                    return false;
+                    throw new Exception("Error: The start date cannot be after the end date. Please select a valid date range.");
                 }
                 if (start.isAfter(LocalDate.now())) {
-                    JOptionPane.showMessageDialog(null, "Error: The start date cannot be after the current date. Please select a valid date range.");
-                    toggleDateRangePlaceHolder();
-                    return false;
+                    throw new Exception("Error: The start date cannot be after the current date. Please select a valid date range.");
                 }
                 return true;
             } catch (DateTimeParseException e) {
                 JOptionPane.showMessageDialog(null, "Error: Invalid date format. Please enter dates in the format yyyy-mm-dd.");
+                toggleDateRangePlaceHolder();
+                return false;
+            } catch (Exception e) {
+                ExceptionHandler.invalidDates(e.getMessage());
                 toggleDateRangePlaceHolder();
                 return false;
             }
@@ -308,8 +308,8 @@ public class AccountBalanceForm extends JDialog {
                 loggedU.totalBalance = rs.getBigDecimal("account_balance");
                 lblTotalBalance.setText("$" + loggedU.totalBalance);
             }
-        } catch (Exception er) {
-            er.printStackTrace();
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
     }
 
@@ -327,8 +327,8 @@ public class AccountBalanceForm extends JDialog {
                 lblTotalIncome.setText("$" + loggedU.totalIncome);
                 lblTotalExpenses.setText("$" + loggedU.totalExpense);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
     }
 
@@ -337,10 +337,9 @@ public class AccountBalanceForm extends JDialog {
                 new Object[]{"Amount", "Type", "Running Balance", "Category ID", "Category Name", "Date"},0
         );
         tableTransactionHistory.setModel(model);
-        Connection con = null;
-        PreparedStatement ps = null;
         try {
-            con = ConnectionProvider.getCon();
+            Connection con = ConnectionProvider.getCon();
+            PreparedStatement ps = null;
             if (filterOption.equals("default")) {
                 ps = con.prepareStatement("SELECT\n" +
                         "    t.amount,\n" +
@@ -422,9 +421,8 @@ public class AccountBalanceForm extends JDialog {
                         rs.getString("date")
                 });
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Error while trying to retrieve information.");
-            e.printStackTrace();
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
     }
 
@@ -433,10 +431,9 @@ public class AccountBalanceForm extends JDialog {
                 new Object[]{"Amount", "Type", "Running Balance", "Date"},0
         );
         tableTransactionHistory.setModel(model);
-        Connection con = null;
-        PreparedStatement ps = null;
         try {
-            con = ConnectionProvider.getCon();
+            Connection con = ConnectionProvider.getCon();
+            PreparedStatement ps = null;
             if (!filter.toggleFilter) {
                 ps = con.prepareStatement("SELECT\n" +
                         "   amount,\n" +
@@ -472,9 +469,8 @@ public class AccountBalanceForm extends JDialog {
             while (rs.next()) {
                 model.addRow(new Object[]{rs.getString("amount"), rs.getString("type"), rs.getString("running_balance"), rs.getString("date")});
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Error while trying to retrieve data.");
-            e.printStackTrace();
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
     }
 
@@ -483,10 +479,9 @@ public class AccountBalanceForm extends JDialog {
                 new Object[]{"Amount", "Type", "Running Balance", "Payment Method", "Category ID", "Category Name", "Description", "Date"},0
         );
         tableTransactionHistory.setModel(model);
-        Connection con = null;
-        PreparedStatement ps = null;
         try {
-            con = ConnectionProvider.getCon();
+            Connection con = ConnectionProvider.getCon();
+            PreparedStatement ps = null;
             if (!filter.toggleFilter) {
                 ps = con.prepareStatement("SELECT\n" +
                     "    t.amount,\n" +
@@ -540,9 +535,8 @@ public class AccountBalanceForm extends JDialog {
                         rs.getString("date")
                 });
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Error while trying to retrieve data.");
-            e.printStackTrace();
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
     }
 
@@ -558,9 +552,8 @@ public class AccountBalanceForm extends JDialog {
             while (rs.next()) {
                 dates.add(rs.getString("year_month"));
             }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, "Error while trying to retrieve data.");
-            e.printStackTrace();
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
         return dates;
     }

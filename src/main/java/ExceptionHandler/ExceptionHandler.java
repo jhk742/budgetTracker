@@ -7,6 +7,10 @@ import java.sql.SQLException;
 
 public class ExceptionHandler {
 
+    public static void invalidDates(String message) {
+        JOptionPane.showMessageDialog(null, message);
+    }
+
     public static void userDoesNotExist(RuntimeException error) {
         JOptionPane.showMessageDialog(null, "Authentication failed: " + error.getMessage());
     }
