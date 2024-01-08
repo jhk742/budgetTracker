@@ -1,5 +1,6 @@
 import Connectors.ConnectionProvider;
 import Users.loggedUser;
+import ExceptionHandler.ExceptionHandler;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,6 +10,7 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class addUserForm extends JDialog {
     private JTextField txtName;
@@ -39,72 +41,63 @@ public class addUserForm extends JDialog {
         comboBoxStatus.addItem("Active");
         comboBoxStatus.addItem("Inactive");
 
-        btnAdd.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String name = txtName.getText();
-                String email = txtEmail.getText();
-                String phone = txtPhone.getText();
-                String address = txtAddress.getText();
-                String password = txtPassword.getText();
-                String status = String.valueOf(comboBoxStatus.getSelectedItem());
+        btnAdd.addActionListener(e -> {
+            String name = txtName.getText();
+            String email = txtEmail.getText();
+            String phone = txtPhone.getText();
+            String address = txtAddress.getText();
+            String password = txtPassword.getText();
+            String status = String.valueOf(comboBoxStatus.getSelectedItem());
 
-                boolean passedAuthentication = authenticateValues(name, phone, address, password, status);
-                if(!passedAuthentication) {
-                    JOptionPane.showMessageDialog(null, "You must provide all fields with a value.");
-                } else {
+            boolean passedAuthentication = authenticateValues(name, phone, address, password, status);
+            if(!passedAuthentication) {
+                JOptionPane.showMessageDialog(null, "You must provide all fields with a value.");
+            } else {
+                try {
+                    Connection con = ConnectionProvider.getCon();
+                    PreparedStatement ps = con.prepareStatement("insert into user (name, email, phone, address, password, status) values (?, ?, ?, ?, ?, ?)");
+                    ps.setString(1, name);
+                    ps.setString(2, email);
+                    ps.setString(3, phone);
+                    ps.setString(4, address);
+                    ps.setString(5, password);
+                    ps.setInt(6, status.equals("Active") ? 1 : 0);
+                    int rowsAffected = ps.executeUpdate();
                     try {
-                        Connection con = ConnectionProvider.getCon();
-                        PreparedStatement ps = con.prepareStatement("insert into user (name, email, phone, address, password, status) values (?, ?, ?, ?, ?, ?)");
-                        ps.setString(1, name);
-                        ps.setString(2, email);
-                        ps.setString(3, phone);
-                        ps.setString(4, address);
-                        ps.setString(5, password);
-                        ps.setInt(6, status.equals("Active") ? 1 : 0);
-                        int rowsAffected = ps.executeUpdate();
-                        try {
-                            PreparedStatement createdUser = con.prepareStatement("select * from user where name=? and email=? and password=?");
-                            createdUser.setString(1, name);
-                            createdUser.setString(2, email);
-                            createdUser.setString(3, password);
-                            ResultSet rs = createdUser.executeQuery();
-                            if (rs.next()) {
-                                int userId = rs.getInt("id");
-                                try {
-                                    //retrieve and use id after creation
-                                    PreparedStatement psBalance = con.prepareStatement("insert into bank_accounts (user_id, account_balance) values (?, ?)");
-                                    psBalance.setInt(1, userId);
-                                    psBalance.setBigDecimal(2, new BigDecimal(txtBalance.getText()));
-                                    int rowsAffectedBankAccounts = psBalance.executeUpdate();
-                                    if (rowsAffected > 0 && rowsAffectedBankAccounts > 0) {
-                                        JOptionPane.showMessageDialog(null, "User successfully created.");
-                                    }
-                                } catch (Exception er2) {
-                                    System.out.println(er2);
+                        PreparedStatement createdUser = con.prepareStatement("select * from user where name=? and email=? and password=?");
+                        createdUser.setString(1, name);
+                        createdUser.setString(2, email);
+                        createdUser.setString(3, password);
+                        ResultSet rs = createdUser.executeQuery();
+                        if (rs.next()) {
+                            int userId = rs.getInt("id");
+                            try {
+                                //retrieve and use id after creation
+                                PreparedStatement psBalance = con.prepareStatement("insert into bank_accounts (user_id, account_balance) values (?, ?)");
+                                psBalance.setInt(1, userId);
+                                psBalance.setBigDecimal(2, new BigDecimal(txtBalance.getText()));
+                                int rowsAffectedBankAccounts = psBalance.executeUpdate();
+                                if (rowsAffected > 0 && rowsAffectedBankAccounts > 0) {
+                                    JOptionPane.showMessageDialog(null, "User successfully created.");
                                 }
+                            } catch (SQLException insertNewUser) {
+                                ExceptionHandler.unableToConnectToDb(insertNewUser);
                             }
-                        } catch (Exception er1) {
-                            System.out.println(er1);
                         }
-                         setVisible(false);
-                        //"notifies" the parent form of the change by invoking the
-                        //interface method that was overridden by the parent.
-                        parentForm.onDataChange();
-                    } catch(Exception er) {
-                        JOptionPane.showMessageDialog(null, "There was an error trying to create the user.");
-                        throw new IllegalStateException(er);
+                    } catch (SQLException createdUser) {
+                        ExceptionHandler.unableToConnectToDb(createdUser);
                     }
+                     setVisible(false);
+                    //"notifies" the parent form of the change by invoking the
+                    //interface method that was overridden by the parent.
+                    parentForm.onDataChange();
+                } catch(SQLException er) {
+                      ExceptionHandler.unableToConnectToDb(er);
                 }
             }
         });
-
-        btnCancel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-            }
-        });
+        
+        btnCancel.addActionListener(e -> dispose());
     }
 
     public static boolean authenticateValues(String name, String phone, String address, String password, String status) {

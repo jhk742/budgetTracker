@@ -15,13 +15,16 @@ public class ExceptionHandler {
         String connectionDefaultMessage = "Database Connection Error. " + "\nReason: ";
         String queryDefaultMessage = "Database Operation Error. " + "\nReason: ";
         int errorCode = e.getErrorCode();
+        //access denied
         if (errorCode == 1045) {
             JOptionPane.showMessageDialog(null, connectionDefaultMessage + e.getMessage().substring(0, e.getMessage().length() - 21) + "\nVendor Code: " +
                     errorCode);
         }
+        //unknown database
         if (errorCode == 1049) {
             JOptionPane.showMessageDialog(null, connectionDefaultMessage + e.getMessage() + "\nVendor Code: " + errorCode);
         }
+        //communications link failure
         if (errorCode == 0) {
             JOptionPane.showMessageDialog(null, connectionDefaultMessage + e.getMessage().substring(110, e.getMessage().length() - 1) + "\nVendor Code: " + errorCode);
         }

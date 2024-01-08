@@ -128,54 +128,45 @@ public class usersForm extends JDialog implements DataChangeListener {
         });
 
         //create and add a user
-        btnAdd.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                //pass in the reference to the form itself (JFrom.this) as
-                //it implemetns the dataChangeListener. Once a new user is added,
-                //the onDataChange method is invoked to repopulate the jtable to
-                //reflect the change=(addition of a new user).
-                addUserForm auf = new addUserForm(usersForm.this, loggedU);
-                auf.setVisible(true);
-            }
+        btnAdd.addActionListener(e -> {
+            //pass in the reference to the form itself (JFrom.this) as
+            //it implemetns the dataChangeListener. Once a new user is added,
+            //the onDataChange method is invoked to repopulate the jtable to
+            //reflect the change=(addition of a new user).
+            addUserForm auf = new addUserForm(usersForm.this, loggedU);
+            auf.setVisible(true);
         });
 
-        btnDelete.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ArrayList<String> userFields = getUserFields(usersForm.this);
-                String passWord = getUserPassword(Integer.parseInt(user.id), user.name, user.email, user.phone);
-                try {
-                    Connection con = ConnectionProvider.getCon();
-                    PreparedStatement ps = con.prepareStatement("delete from users where id=? and name=? and email=? and password=?");
-                    ps.setInt(1, Integer.parseInt(userFields.get(0)));
-                    ps.setString(2, userFields.get(1));
-                    ps.setString(3, userFields.get(2));
-                    ps.setString(4, passWord);
-                    int rowsAffected = ps.executeUpdate();
-                    if (rowsAffected > 0) {
-                        JOptionPane.showMessageDialog(null, "User successfully deleted.");
-                        setVisible(false);
-                        usersForm uf = new usersForm(null, loggedU);
-                        uf.setVisible(true);
-                    }
-                } catch(SQLException er) {
-                    ExceptionHandler.unableToConnectToDb(er);
+        btnDelete.addActionListener(e -> {
+            ArrayList<String> userFields = getUserFields(usersForm.this);
+            String passWord = getUserPassword(Integer.parseInt(user.id), user.name, user.email, user.phone);
+            try {
+                Connection con = ConnectionProvider.getCon();
+                PreparedStatement ps = con.prepareStatement("delete from users where id=? and name=? and email=? and password=?");
+                ps.setInt(1, Integer.parseInt(userFields.get(0)));
+                ps.setString(2, userFields.get(1));
+                ps.setString(3, userFields.get(2));
+                ps.setString(4, passWord);
+                int rowsAffected = ps.executeUpdate();
+                if (rowsAffected > 0) {
+                    JOptionPane.showMessageDialog(null, "User successfully deleted.");
+                    setVisible(false);
+                    usersForm uf = new usersForm(null, loggedU);
+                    uf.setVisible(true);
                 }
+            } catch(SQLException er) {
+                ExceptionHandler.unableToConnectToDb(er);
             }
         });
 
-        btnReset.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                txtId.setText("");
-                txtName.setText("");
-                txtEmail.setText("");
-                txtPhone.setText("");
-                txtAddress.setText("");
-                comboBoxStatus.setSelectedIndex(0);
-                tableUsers.clearSelection();
-            }
+        btnReset.addActionListener(e -> {
+            txtId.setText("");
+            txtName.setText("");
+            txtEmail.setText("");
+            txtPhone.setText("");
+            txtAddress.setText("");
+            comboBoxStatus.setSelectedIndex(0);
+            tableUsers.clearSelection();
         });
         
         btnToHome.addActionListener(new ActionListener() {
