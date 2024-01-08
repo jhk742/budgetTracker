@@ -11,9 +11,10 @@ public class ExceptionHandler {
         JOptionPane.showMessageDialog(null, "Authentication failed: " + error.getMessage());
     }
 
-    public static void unableToConnectToDb(int errorCode, SQLException e) {
+    public static void unableToConnectToDb(SQLException e) {
         String connectionDefaultMessage = "Database Connection Error. " + "\nReason: ";
         String queryDefaultMessage = "Database Operation Error. " + "\nReason: ";
+        int errorCode = e.getErrorCode();
         if (errorCode == 1045) {
             JOptionPane.showMessageDialog(null, connectionDefaultMessage + e.getMessage().substring(0, e.getMessage().length() - 21) + "\nVendor Code: " +
                     errorCode);

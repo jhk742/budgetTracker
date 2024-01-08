@@ -63,13 +63,13 @@ public class loginForm extends JDialog {
                 } catch (DatabaseConnectionException dex) {
                     SQLException originalException = (SQLException) dex.getCause();
                     System.out.println("OG: " + originalException);
-                    if (originalException != null) {
-                        System.out.println(dex.getMessage());
-                        // Access details from the original SQLException if needed
-                        System.out.println("SQL State: " + originalException.getSQLState());
-                        System.out.println("Vendor Code: " + originalException.getErrorCode());
-                    }
-                    ExceptionHandler.unableToConnectToDb(originalException.getErrorCode(), originalException);
+//                    if (originalException != null) {
+//                        System.out.println(dex.getMessage());
+//                        // Access details from the original SQLException if needed
+//                        System.out.println("SQL State: " + originalException.getSQLState());
+//                        System.out.println("Vendor Code: " + originalException.getErrorCode());
+//                    }
+                    ExceptionHandler.unableToConnectToDb(originalException);
                 } catch (RuntimeException ex) {
                     ExceptionHandler.userDoesNotExist(ex);
                 }

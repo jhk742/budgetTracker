@@ -1,6 +1,8 @@
 import Connectors.ConnectionProvider;
+import ExceptionHandler.Exceptions.DatabaseConnectionException;
 import Users.User;
 import Users.loggedUser;
+import ExceptionHandler.ExceptionHandler;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -119,8 +121,8 @@ public class usersForm extends JDialog implements DataChangeListener {
                         usersForm uf = new usersForm(null, loggedU);
                         uf.setVisible(true);
                     }
-                } catch (Exception er) {
-                    JOptionPane.showMessageDialog(null, er);
+                } catch (SQLException er) {
+                    ExceptionHandler.unableToConnectToDb(er);
                 }
             }
         });
@@ -145,24 +147,24 @@ public class usersForm extends JDialog implements DataChangeListener {
                 String passWord = getUserPassword(Integer.parseInt(user.id), user.name, user.email, user.phone);
                 try {
                     Connection con = ConnectionProvider.getCon();
-                    PreparedStatement ps = con.prepareStatement("delete from user where id=? and name=? and email=? and password=?");
+                    PreparedStatement ps = con.prepareStatement("delete from users where id=? and name=? and email=? and password=?");
                     ps.setInt(1, Integer.parseInt(userFields.get(0)));
                     ps.setString(2, userFields.get(1));
                     ps.setString(3, userFields.get(2));
                     ps.setString(4, passWord);
                     int rowsAffected = ps.executeUpdate();
                     if (rowsAffected > 0) {
-                        JOptionPane.showMessageDialog(null, "Users.User successfully deleted.");
+                        JOptionPane.showMessageDialog(null, "User successfully deleted.");
                         setVisible(false);
                         usersForm uf = new usersForm(null, loggedU);
                         uf.setVisible(true);
                     }
-                } catch(Exception er) {
-                    JOptionPane.showMessageDialog(null, "We encountered an error while trying to delete the user.");
+                } catch(SQLException er) {
+                    ExceptionHandler.unableToConnectToDb(er);
                 }
             }
         });
-//new Object[]{"ID","Name","Email","Phone","Address","Status"},0
+
         btnReset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -200,8 +202,8 @@ public class usersForm extends JDialog implements DataChangeListener {
                 ret = rs.getString("password");
             }
             return ret;
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null, e);
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
         return null;
     }
@@ -218,9 +220,8 @@ public class usersForm extends JDialog implements DataChangeListener {
             while (rs.next()) {
                 model.addRow(new Object[]{rs.getString("id"), rs.getString("name"), rs.getString("email"), rs.getString("phone"), rs.getString("address"), rs.getString("status").equals("1") ? "Active" : "Inactive"});
             }
-
-        } catch(Exception x) {
-            JOptionPane.showMessageDialog(null, x);
+        } catch(SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
     }
 
