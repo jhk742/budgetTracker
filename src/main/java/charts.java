@@ -9,6 +9,7 @@ import org.jfree.chart.title.LegendTitle;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.jdbc.JDBCCategoryDataset;
+import ExceptionHandler.ExceptionHandler;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,6 +17,7 @@ import java.awt.event.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class charts extends JDialog{
     private JPanel chartForm;
@@ -122,53 +124,41 @@ public class charts extends JDialog{
     }
 
     private JDBCCategoryDataset createLineGraphDataSet(String option) {
-        if (option.equals("Income")) {
-            try  {
-                // income will be displayed using a line-graph
-                Connection con = ConnectionProvider.getCon();
-                JDBCCategoryDataset lineGraphDataSet = new JDBCCategoryDataset(con, "SELECT date, SUM(amount) AS total_amount\n" +
-                    "FROM transactions\n" +
-                    "WHERE type = 'Income'\n" +
-                    "GROUP BY date\n" +
-                    "ORDER BY date");
-                return lineGraphDataSet;
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            Connection con = ConnectionProvider.getCon();
+            JDBCCategoryDataset lineGraphDataSet = null;
+            if (option.equals("Income")) {
+                lineGraphDataSet = new JDBCCategoryDataset(con, "SELECT date, SUM(amount) AS total_amount\n" +
+                        "FROM transactions\n" +
+                        "WHERE type = 'Income'\n" +
+                        "GROUP BY date\n" +
+                        "ORDER BY date");
             }
-        }
-        if (option.equals("Profit/Loss")) {
-            try {
-                Connection con = ConnectionProvider.getCon();
-                JDBCCategoryDataset lineGraphDataSet = new JDBCCategoryDataset(con, "SELECT\n" +
-                    " DATE(date) AS date,\n" +
-                    " SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) -\n" +
-                    " SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) AS running_balance\n" +
-                    " FROM transactions\n" +
-                    " GROUP BY DATE(date)\n" +
-                    " ORDER BY DATE(date)");
-                return lineGraphDataSet;
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (option.equals("Profit/Loss")) {
+                lineGraphDataSet = new JDBCCategoryDataset(con, "SELECT\n" +
+                        " DATE(date) AS date,\n" +
+                        " SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) -\n" +
+                        " SUM(CASE WHEN type = 'Expense' THEN amount ELSE 0 END) AS running_balance\n" +
+                        " FROM transactions\n" +
+                        " GROUP BY DATE(date)\n" +
+                        " ORDER BY DATE(date)");
             }
-        }
-        if(option.equals("ClosingBalance")) {
-            try {
-                Connection con = ConnectionProvider.getCon();
-                JDBCCategoryDataset lineGraphDataSet = new JDBCCategoryDataset(con, "WITH RankedTransactions AS (\n" +
-                    " SELECT\n" +
-                    " *,\n" +
-                    " ROW_NUMBER() OVER (PARTITION BY date ORDER BY transaction_id DESC) AS row_num\n" +
-                    " FROM transactions\n" +
-                    " )\n" +
-                    " SELECT\n" +
-                    " date,\n" +
-                    " running_balance\n" +
-                    " FROM RankedTransactions\n" +
-                    " WHERE row_num = 1;\n");
-                return lineGraphDataSet;
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (option.equals("ClosingBalance")) {
+                lineGraphDataSet = new JDBCCategoryDataset(con, "WITH RankedTransactions AS (\n" +
+                        " SELECT\n" +
+                        " *,\n" +
+                        " ROW_NUMBER() OVER (PARTITION BY date ORDER BY transaction_id DESC) AS row_num\n" +
+                        " FROM transactions\n" +
+                        " )\n" +
+                        " SELECT\n" +
+                        " date,\n" +
+                        " running_balance\n" +
+                        " FROM RankedTransactions\n" +
+                        " WHERE row_num = 1;\n");
             }
+            return lineGraphDataSet;
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
         return null;
     }
@@ -184,11 +174,12 @@ public class charts extends JDialog{
                 " GROUP BY date\n" +
                 " ORDER BY date");
             return barChartDataSet;
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
         return null;
     }
+
     private DefaultPieDataset createPieChartDataset() {
         DefaultPieDataset dataset = new DefaultPieDataset();
         // Connect to the database (replace with your database credentials)
@@ -205,8 +196,8 @@ public class charts extends JDialog{
                 double total = rs.getDouble("total");
                 dataset.setValue(category, total);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
         return dataset;
     }
