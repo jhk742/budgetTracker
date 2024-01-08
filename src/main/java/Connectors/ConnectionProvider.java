@@ -13,13 +13,12 @@ public class ConnectionProvider {
 
     private static Connection connection;
 
-    public static Connection getCon() {
+    public static Connection getCon() throws SQLException {
         try {
             connection = DriverManager.getConnection(jdbcUrl, username, password);
             return connection;
         } catch(SQLException e) {
-            System.out.println(e);
-            return null;
+            throw e;
         }
     }
 

@@ -1,5 +1,7 @@
 import Connectors.ConnectionProvider;
+import ExceptionHandler.Exceptions.DatabaseConnectionException;
 import Users.loggedUser;
+import ExceptionHandler.ExceptionHandler;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,33 +32,46 @@ public class loginForm extends JDialog {
         btnSubmit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String email = txtEmail.getText();
-                String password = String.valueOf(txtPassword.getPassword());
-                loggedUser user = authenticateUser(email, password);
+                try {
+                    String email = txtEmail.getText();
+                    String password = String.valueOf(txtPassword.getPassword());
+                    loggedUser user = authenticateUser(email, password);
 
-                // exists and is active
-                if (user.status == 1) {
-                    // open up homepage for budget-tracking app
-                    homeForm hForm = new homeForm(null, user);
-                    setVisible(false);
-                    hForm.setVisible(true);
-                }
-                //exists but is inactive (ask if user wants to re-activate account)
-                if (user.status == 0) {
-                    int result = JOptionPane.showConfirmDialog(null,
-                            "Your account has been temporarily deactivated. Would you like to reactivate it now?",
-                            "Confirmation",
-                            JOptionPane.YES_NO_OPTION
-                    );
-                    System.out.println("RESULT: " + result);
-                    //yes, reactivate
-                    if (result == 0) {
-                        reactivateUser(email, password);
+                    // exists and is active
+                    if (user.status == 1) {
+                        // open up homepage for budget-tracking app
+                        homeForm hForm = new homeForm(null, user);
+                        setVisible(false);
+                        hForm.setVisible(true);
                     }
-                }
-                //does not exist
-                if (user == null) {
-                    JOptionPane.showMessageDialog(null, "This account does not exist.");
+                    //exists but is inactive (ask if user wants to re-activate account)
+                    if (user.status == 0) {
+                        int result = JOptionPane.showConfirmDialog(null,
+                                "Your account has been temporarily deactivated. Would you like to reactivate it now?",
+                                "Confirmation",
+                                JOptionPane.YES_NO_OPTION
+                        );
+                        //yes, reactivate
+                        if (result == 0) {
+                            reactivateUser(email, password);
+                        }
+                    }
+                    //does not exist
+                    if (user.status == -1) {
+                        throw new RuntimeException("This account does not exist.");
+                    }
+                } catch (DatabaseConnectionException dex) {
+                    SQLException originalException = (SQLException) dex.getCause();
+                    System.out.println("OG: " + originalException);
+                    if (originalException != null) {
+                        System.out.println(dex.getMessage());
+                        // Access details from the original SQLException if needed
+                        System.out.println("SQL State: " + originalException.getSQLState());
+                        System.out.println("Vendor Code: " + originalException.getErrorCode());
+                    }
+                    ExceptionHandler.unableToConnectToDb(originalException.getErrorCode(), originalException);
+                } catch (RuntimeException ex) {
+                    ExceptionHandler.userDoesNotExist(ex);
                 }
             }
         });
@@ -87,14 +102,13 @@ public class loginForm extends JDialog {
                 user.phone = rs.getString("phone");
                 user.password = rs.getString("password");
                 user.status = rs.getInt("status");
-                return user;
             } else {
-                JOptionPane.showMessageDialog(null, "Incorrect email or password.");
+                user.status = -1;
             }
-        } catch(Exception e) {
-            JOptionPane.showMessageDialog(null, "Could not connect to the database.");
+            return user;
+        } catch(SQLException e) {
+            throw new DatabaseConnectionException(e);
         }
-        return null;
     }
 
     private void reactivateUser(String email, String password) {
@@ -108,7 +122,7 @@ public class loginForm extends JDialog {
                 JOptionPane.showMessageDialog(null, "Your account has been reactivated. Please try logging in again.");
             }
         } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, "Error while updating user information.");
+            throw new DatabaseConnectionException(e);
         }
     }
 }

@@ -61,7 +61,7 @@ public class addUserForm extends JDialog {
                         ps.setString(3, phone);
                         ps.setString(4, address);
                         ps.setString(5, password);
-                        ps.setInt(6, status.equals("Active") ? 1 : 2);
+                        ps.setInt(6, status.equals("Active") ? 1 : 0);
                         int rowsAffected = ps.executeUpdate();
                         try {
                             PreparedStatement createdUser = con.prepareStatement("select * from user where name=? and email=? and password=?");
@@ -78,7 +78,7 @@ public class addUserForm extends JDialog {
                                     psBalance.setBigDecimal(2, new BigDecimal(txtBalance.getText()));
                                     int rowsAffectedBankAccounts = psBalance.executeUpdate();
                                     if (rowsAffected > 0 && rowsAffectedBankAccounts > 0) {
-                                        JOptionPane.showMessageDialog(null, "Users.User successfully created.");
+                                        JOptionPane.showMessageDialog(null, "User successfully created.");
                                     }
                                 } catch (Exception er2) {
                                     System.out.println(er2);
