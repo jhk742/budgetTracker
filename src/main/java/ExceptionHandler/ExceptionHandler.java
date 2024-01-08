@@ -11,6 +11,10 @@ public class ExceptionHandler {
         JOptionPane.showMessageDialog(null, "Authentication failed: " + error.getMessage());
     }
 
+    public static void allFieldsRequired(String message) {
+        JOptionPane.showMessageDialog(null, message);
+    }
+
     public static void unableToConnectToDb(SQLException e) {
         String connectionDefaultMessage = "Database Connection Error. " + "\nReason: ";
         String queryDefaultMessage = "Database Operation Error. " + "\nReason: ";

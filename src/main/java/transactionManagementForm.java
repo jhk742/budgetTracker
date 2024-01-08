@@ -1,5 +1,6 @@
 import Connectors.ConnectionProvider;
 import Users.loggedUser;
+import ExceptionHandler.ExceptionHandler;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -8,10 +9,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -81,8 +79,8 @@ public class transactionManagementForm extends JDialog {
                     while (rs.next()) {
                         comboBoxCategory.addItem(rs.getString("name"));
                     }
-                } catch (Exception er) {
-                    JOptionPane.showMessageDialog(null, "Failed to retrieve category names.");
+                } catch (SQLException er) {
+                    ExceptionHandler.unableToConnectToDb(er);
                 }
             }
             if (selectedOption.equals("Income")) {
@@ -101,15 +99,16 @@ public class transactionManagementForm extends JDialog {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String formattedDate = currentDate.format(formatter);
             if(validationStatus) {
-                if (option.equals("Expense")) {
-                    // first retrieve the category id
-                    int categoryId = getCategoryIdByName(comboBoxCategory);
-                    String paymentMethod = String.valueOf(comboBoxPaymentMethod.getSelectedItem());
-                    String location = txtLocation.getText();
-                    // insert into transactions table
-                    try {
-                        Connection con = ConnectionProvider.getCon();
-                        PreparedStatement ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, category_id, " +
+                try {
+                    Connection con = ConnectionProvider.getCon();
+                    PreparedStatement ps = null;
+                    if (option.equals("Expense")) {
+                        // first retrieve the category id
+                        int categoryId = getCategoryIdByName(comboBoxCategory);
+                        String paymentMethod = String.valueOf(comboBoxPaymentMethod.getSelectedItem());
+                        String location = txtLocation.getText();
+                        // insert into transactions table
+                        ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, category_id, " +
                                 "type, account_id, running_balance, payment_method, location) " +
                                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         ps.setString(1, formattedDate);
@@ -125,16 +124,9 @@ public class transactionManagementForm extends JDialog {
                         if (rowsAffectedTransaction > 0) {
                             updateBankAccount("Expense", loggedU, amount);
                         }
-                        //update bank_accounts table
-                    } catch (Exception er) {
-                        JOptionPane.showMessageDialog(null, "Error trying to create transaction.");
                     }
-
-                }
-                if (option.equals("Income")) {
-                    try {
-                        Connection con = ConnectionProvider.getCon();
-                        PreparedStatement ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, " +
+                    if (option.equals("Income")) {
+                        ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, " +
                                 "type, account_id, running_balance) " +
                                 "VALUES (?, ?, ?, ?, ?, ?)");
                         ps.setString(1, formattedDate);
@@ -147,15 +139,15 @@ public class transactionManagementForm extends JDialog {
                         if (rowsAffectedTransaction > 0) {
                             updateBankAccount("Income", loggedU, amount);
                         }
-                    } catch (Exception er) {
-                        JOptionPane.showMessageDialog(null, "Error trying to create transaction.");
                     }
+                    //update to show new balance and reset all other fields to default (blanks)
+                    getLoggedUserTotalBalance(loggedU);
+                    resetFields();
+                } catch (SQLException er) {
+                    ExceptionHandler.unableToConnectToDb(er);
                 }
-                //update to show new balance and reset all other fields to default (blanks)
-                getLoggedUserTotalBalance(loggedU);
-                resetFields();
             } else {
-                JOptionPane.showMessageDialog(null, "All fields are required.");
+                ExceptionHandler.allFieldsRequired("All fields are required.");
             }
         });
 
@@ -280,7 +272,9 @@ public class transactionManagementForm extends JDialog {
         comboBoxType.setSelectedIndex(0);
         txtDescription.setText("");
         txtAmount.setText("");
-        comboBoxCategory.setSelectedIndex(0);
+        if (comboBoxCategory.isEnabled()) {
+            comboBoxCategory.setSelectedIndex(0);
+        }
         txtRunningBalance.setText("");
         comboBoxPaymentMethod.setSelectedIndex(0);
         txtLocation.setText("");
