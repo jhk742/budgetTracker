@@ -1,8 +1,10 @@
+package gui;
+
 import Connectors.ConnectionProvider;
-import ExceptionHandler.Exceptions.DatabaseConnectionException;
 import Users.User;
 import Users.loggedUser;
 import ExceptionHandler.ExceptionHandler;
+import databaseHandlers.usersFormDatabaseHandlers;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -26,14 +28,18 @@ public class usersForm extends JDialog implements DataChangeListener {
     private JTextField txtPhone;
     private JComboBox comboBoxStatus;
     private JTextField txtStatus;
+
+    //for selected User from table
     private User user = new User();
     private ArrayList<String> userFields;
+
+    private usersFormDatabaseHandlers dbHandler = new usersFormDatabaseHandlers();
 
     //to repopulate the jtable once a new user has been added to the database
     //via the "Add" button
     @Override
     public void onDataChange() {
-        populateTable(tableUsers);
+        dbHandler.populateTable(tableUsers);
     }
 
     public usersForm(JFrame parent, loggedUser loggedU) {
@@ -59,7 +65,7 @@ public class usersForm extends JDialog implements DataChangeListener {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
-                populateTable(tableUsers);
+                dbHandler.populateTable(tableUsers);
             }
         });
 
@@ -99,31 +105,7 @@ public class usersForm extends JDialog implements DataChangeListener {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                ArrayList<String> userFields = getUserFields(usersForm.this);
-                //send in original values that match the values stored within the table pre-update
-                String passWord = getUserPassword(Integer.parseInt(user.id), user.name, user.email, user.phone);
-                System.out.println(passWord);
-                try {
-                    //update with new values provided in the textFields
-                    Connection con = ConnectionProvider.getCon();
-                    PreparedStatement ps = con.prepareStatement("update user set name=?, email=?, phone=?, address=?, status=? where id=? and password=?");
-                    ps.setString(1, userFields.get(1));
-                    ps.setString(2, userFields.get(2));
-                    ps.setString(3, userFields.get(3));
-                    ps.setString(4, userFields.get(4));
-                    ps.setInt(5, userFields.get(5).equals("Active") ? 1 : 2);
-                    ps.setString(6, userFields.get(0));
-                    ps.setString(7, passWord);
-                    int affectedRows = ps.executeUpdate();
-                    if (affectedRows > 0) {
-                        JOptionPane.showMessageDialog(null, "The user information has been successfully updated.");
-                        setVisible(false);
-                        usersForm uf = new usersForm(null, loggedU);
-                        uf.setVisible(true);
-                    }
-                } catch (SQLException er) {
-                    ExceptionHandler.unableToConnectToDb(er);
-                }
+                dbHandler.updateUser(user, loggedU, usersForm.this);
             }
         });
 
@@ -138,25 +120,7 @@ public class usersForm extends JDialog implements DataChangeListener {
         });
 
         btnDelete.addActionListener(e -> {
-            ArrayList<String> userFields = getUserFields(usersForm.this);
-            String passWord = getUserPassword(Integer.parseInt(user.id), user.name, user.email, user.phone);
-            try {
-                Connection con = ConnectionProvider.getCon();
-                PreparedStatement ps = con.prepareStatement("delete from users where id=? and name=? and email=? and password=?");
-                ps.setInt(1, Integer.parseInt(userFields.get(0)));
-                ps.setString(2, userFields.get(1));
-                ps.setString(3, userFields.get(2));
-                ps.setString(4, passWord);
-                int rowsAffected = ps.executeUpdate();
-                if (rowsAffected > 0) {
-                    JOptionPane.showMessageDialog(null, "User successfully deleted.");
-                    setVisible(false);
-                    usersForm uf = new usersForm(null, loggedU);
-                    uf.setVisible(true);
-                }
-            } catch(SQLException er) {
-                ExceptionHandler.unableToConnectToDb(er);
-            }
+            dbHandler.deleteUser(user, loggedU, usersForm.this);
         });
 
         btnReset.addActionListener(e -> {
@@ -179,44 +143,24 @@ public class usersForm extends JDialog implements DataChangeListener {
         });
     }
 
-    public static String getUserPassword(int id, String name, String email, String phone) {
-        String ret = "";
-        try {
-            Connection con = ConnectionProvider.getCon();
-            PreparedStatement ps = con.prepareStatement("select * from user where id=? and name=? and email=? and phone=?");
-            ps.setInt(1, id);
-            ps.setString(2, name);
-            ps.setString(3, email);
-            ps.setString(4, phone);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                ret = rs.getString("password");
-            }
-            return ret;
-        } catch (SQLException e) {
-            ExceptionHandler.unableToConnectToDb(e);
-        }
-        return null;
-    }
+//    public static void populateTable(JTable tableUsers) {
+//        DefaultTableModel model = new DefaultTableModel(
+//                new Object[]{"ID","Name","Email","Phone","Address","Status"},0
+//        );
+//        tableUsers.setModel(model);
+//        try {
+//            Connection con = ConnectionProvider.getCon();
+//            Statement st = con.createStatement();
+//            ResultSet rs = st.executeQuery("select * from user");
+//            while (rs.next()) {
+//                model.addRow(new Object[]{rs.getString("id"), rs.getString("name"), rs.getString("email"), rs.getString("phone"), rs.getString("address"), rs.getString("status").equals("1") ? "Active" : "Inactive"});
+//            }
+//        } catch(SQLException e) {
+//            ExceptionHandler.unableToConnectToDb(e);
+//        }
+//    }
 
-    public static void populateTable(JTable tableUsers) {
-        DefaultTableModel model = new DefaultTableModel(
-                new Object[]{"ID","Name","Email","Phone","Address","Status"},0
-        );
-        tableUsers.setModel(model);
-        try {
-            Connection con = ConnectionProvider.getCon();
-            Statement st = con.createStatement();
-            ResultSet rs = st.executeQuery("select * from user");
-            while (rs.next()) {
-                model.addRow(new Object[]{rs.getString("id"), rs.getString("name"), rs.getString("email"), rs.getString("phone"), rs.getString("address"), rs.getString("status").equals("1") ? "Active" : "Inactive"});
-            }
-        } catch(SQLException e) {
-            ExceptionHandler.unableToConnectToDb(e);
-        }
-    }
-
-    public ArrayList<String> getUserFields(usersForm uForm) {
+    public static ArrayList<String> getUserFields(usersForm uForm) {
         ArrayList<String> userFields = new ArrayList<>();
         String id = uForm.txtId.getText();
         String name = uForm.txtName.getText();

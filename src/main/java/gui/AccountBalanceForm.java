@@ -1,3 +1,5 @@
+package gui;
+
 import Connectors.ConnectionProvider;
 import Users.loggedUser;
 import ExceptionHandler.ExceptionHandler;

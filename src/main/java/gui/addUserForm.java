@@ -1,11 +1,11 @@
+package gui;
+
 import Connectors.ConnectionProvider;
 import Users.loggedUser;
 import ExceptionHandler.ExceptionHandler;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;

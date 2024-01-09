@@ -1,3 +1,5 @@
+package gui;
+
 import Users.loggedUser;
 
 import javax.swing.*;
