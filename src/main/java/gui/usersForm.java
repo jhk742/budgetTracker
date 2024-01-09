@@ -1,16 +1,12 @@
 package gui;
 
-import Connectors.ConnectionProvider;
 import Users.User;
 import Users.loggedUser;
-import ExceptionHandler.ExceptionHandler;
 import databaseHandlers.usersFormDatabaseHandlers;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
-import java.sql.*;
 import java.util.ArrayList;
 
 public class usersForm extends JDialog implements DataChangeListener {
@@ -27,11 +23,9 @@ public class usersForm extends JDialog implements DataChangeListener {
     private JTextField txtEmail;
     private JTextField txtPhone;
     private JComboBox comboBoxStatus;
-    private JTextField txtStatus;
 
     //for selected User from table
     private User user = new User();
-    private ArrayList<String> userFields;
 
     private usersFormDatabaseHandlers dbHandler = new usersFormDatabaseHandlers();
 
@@ -133,32 +127,12 @@ public class usersForm extends JDialog implements DataChangeListener {
             tableUsers.clearSelection();
         });
         
-        btnToHome.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-                homeForm hf = new homeForm(null, loggedU);
-                hf.setVisible(true);
-            }
+        btnToHome.addActionListener(e -> {
+            setVisible(false);
+            homeForm hf = new homeForm(null, loggedU);
+            hf.setVisible(true);
         });
     }
-
-//    public static void populateTable(JTable tableUsers) {
-//        DefaultTableModel model = new DefaultTableModel(
-//                new Object[]{"ID","Name","Email","Phone","Address","Status"},0
-//        );
-//        tableUsers.setModel(model);
-//        try {
-//            Connection con = ConnectionProvider.getCon();
-//            Statement st = con.createStatement();
-//            ResultSet rs = st.executeQuery("select * from user");
-//            while (rs.next()) {
-//                model.addRow(new Object[]{rs.getString("id"), rs.getString("name"), rs.getString("email"), rs.getString("phone"), rs.getString("address"), rs.getString("status").equals("1") ? "Active" : "Inactive"});
-//            }
-//        } catch(SQLException e) {
-//            ExceptionHandler.unableToConnectToDb(e);
-//        }
-//    }
 
     public static ArrayList<String> getUserFields(usersForm uForm) {
         ArrayList<String> userFields = new ArrayList<>();
