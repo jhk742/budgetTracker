@@ -45,6 +45,7 @@ public class usersFormDatabaseHandlers {
     }
 
     public void deleteUser(User user, loggedUser loggedU, usersForm uForm) {
+        //WILL DELETE FROM user & back_accounts table, but not from transaction (this table is a ledger: data retention)
         ArrayList<String> userFields = getUserFields(uForm);
         String passWord = getUserPassword(Integer.parseInt(user.id), user.name, user.email, user.phone);
         Connection con = null;

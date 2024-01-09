@@ -3,6 +3,7 @@ package gui;
 import Connectors.ConnectionProvider;
 import Users.loggedUser;
 import ExceptionHandler.ExceptionHandler;
+import databaseHandlers.categoryFormDatabaseHandlers;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -22,6 +23,7 @@ public class categoriesForm extends JDialog {
 
     //1. reference to the transactionManagementForm when opened within the txManagementForm
     private String homeFormName;
+    private categoryFormDatabaseHandlers dbHandler = new categoryFormDatabaseHandlers();
 
     public categoriesForm(JFrame parent, loggedUser loggedU, String formName) {
         super(parent);
@@ -40,7 +42,7 @@ public class categoriesForm extends JDialog {
             @Override
             public void windowOpened(WindowEvent e) {
                 try {
-                    populateTable(tableCategories);
+                    dbHandler.populateTable(tableCategories);
                 } catch (SQLException er) {
                     ExceptionHandler.unableToConnectToDb(er);
                 }
@@ -62,36 +64,7 @@ public class categoriesForm extends JDialog {
         btnAdd.addActionListener(e -> {
             String name = txtCategoryName.getText();
             String description = txtCategoryDescription.getText();
-            try {
-                Connection con = ConnectionProvider.getCon();
-                PreparedStatement ps = con.prepareStatement("insert into categories (name, description) values (?, ?)");
-                ps.setString(1, name);
-                ps.setString(2, description);
-                int affectedRows = ps.executeUpdate();
-                if (affectedRows > 0) {
-                    JOptionPane.showMessageDialog(null, "Successfully created category: " + name);
-                    populateTable(tableCategories);
-                }
-            } catch (SQLException ex) {
-                ExceptionHandler.unableToConnectToDb(ex);
-            }
+            dbHandler.addCategory(tableCategories, name, description);
         });
-    }
-
-    public static void populateTable(JTable tableCategories) throws SQLException {
-        DefaultTableModel model = new DefaultTableModel(
-                new Object[]{"ID", "Name", "Description"},0
-        );
-        tableCategories.setModel(model);
-        try {
-            Connection con = ConnectionProvider.getCon();
-            Statement st = con.createStatement();
-            ResultSet rs = st.executeQuery("select * from categories");
-            while (rs.next()) {
-                model.addRow(new Object[]{rs.getString("category_id"), rs.getString("name"), rs.getString("description")});
-            }
-        } catch(SQLException x) {
-            throw new SQLException(x);
-        }
     }
 }
