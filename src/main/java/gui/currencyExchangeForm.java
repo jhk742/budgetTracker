@@ -1,10 +1,8 @@
 package gui;
-
 import Connectors.HttpProvider;
 import Users.loggedUser;
 import org.json.JSONObject;
 import ExceptionHandler.ExceptionHandler;
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;

@@ -1,9 +1,7 @@
 package gui;
-
 import Users.loggedUser;
 import ExceptionHandler.ExceptionHandler;
 import databaseHandlers.transactionManagementFormDatabaseHandlers;
-
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;

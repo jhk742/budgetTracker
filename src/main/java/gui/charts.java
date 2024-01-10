@@ -12,7 +12,6 @@ import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.jdbc.JDBCCategoryDataset;
 import ExceptionHandler.ExceptionHandler;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;

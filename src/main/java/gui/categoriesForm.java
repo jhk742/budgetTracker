@@ -1,12 +1,8 @@
 package gui;
-
-import Connectors.ConnectionProvider;
 import Users.loggedUser;
 import ExceptionHandler.ExceptionHandler;
 import databaseHandlers.categoryFormDatabaseHandlers;
-
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;

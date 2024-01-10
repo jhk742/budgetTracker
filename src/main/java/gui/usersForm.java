@@ -1,9 +1,7 @@
 package gui;
-
 import Users.User;
 import Users.loggedUser;
 import databaseHandlers.usersFormDatabaseHandlers;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
