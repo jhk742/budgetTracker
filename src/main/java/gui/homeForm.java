@@ -78,7 +78,7 @@ public class homeForm extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setVisible(false);
-                charts c = new charts(null, loggedU);
+                chartsForm c = new chartsForm(null, loggedU);
                 c.setVisible(true);
             }
         });
