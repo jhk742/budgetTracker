@@ -122,7 +122,6 @@ public class AccountBalanceForm extends JDialog {
             populateTable("Income", tableIncomeData);
         });
 
-        //!!!!
         btnExpense.addActionListener(e -> {
             toggleSpecificDateRangesAndButtons(
                 new HashMap<String, JTextField>() {{
@@ -164,7 +163,6 @@ public class AccountBalanceForm extends JDialog {
             }
         });
 
-        //!!!!
         comboBoxExpensesFilterByDate.addActionListener(e -> {
             String date = String.valueOf(comboBoxExpensesFilterByDate.getSelectedItem());
             if (!date.equals("--- Select Year-Month ---")) {

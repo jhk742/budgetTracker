@@ -1,10 +1,7 @@
 package databaseHandlers;
-
 import Connectors.ConnectionProvider;
 import ExceptionHandler.Exceptions.DatabaseConnectionException;
 import Users.loggedUser;
-
-import javax.swing.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,7 +34,7 @@ public class loginFormDatabaseHandlers {
         }
     }
 
-    public void reactivateUser(String email, String password) {
+    public boolean reactivateUser(String email, String password) {
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("update user set status=1 where email=? and password=?");
@@ -45,10 +42,11 @@ public class loginFormDatabaseHandlers {
             ps.setString(2, password);
             int rowsAffected =  ps.executeUpdate();
             if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "Your account has been reactivated. Please try logging in again.");
+                return true;
             }
         } catch(SQLException e) {
             throw new DatabaseConnectionException(e);
         }
+        return false;
     }
 }
