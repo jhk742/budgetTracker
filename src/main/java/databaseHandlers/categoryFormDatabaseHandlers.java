@@ -27,8 +27,8 @@ public class categoryFormDatabaseHandlers {
         List<List<String>> retData = new ArrayList<>();
         try {
             Connection con = ConnectionProvider.getCon();
-            Statement st = con.createStatement();
-            ResultSet rs = st.executeQuery("select * from categories");
+            PreparedStatement ps = con.prepareStatement("select * from categories");
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 List<String> rowData = new ArrayList<>();
                 rowData.add(rs.getString("category_id"));

@@ -1,15 +1,10 @@
 import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.*;
 
-import Users.User;
 import databaseHandlers.usersFormDatabaseHandlers;
 import Connectors.ConnectionProvider;
-import Users.loggedUser;
-import gui.usersForm;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
