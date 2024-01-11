@@ -33,7 +33,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.13</version> <!-- Use the latest version available -->
+            <version>4.5.13</version>
         </dependency>
 
         <!-- JSONObject -->
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.14.3</version> <!-- Replace with the latest version -->
+            <version>1.14.3</version>
         </dependency>
 
         <!-- JFreeChart -->
@@ -76,16 +76,15 @@
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito2</artifactId>
-            <version>2.0.9</version> <!-- Use the latest version available -->
+            <version>2.0.9</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
-            <version>2.0.9</version> <!-- Use the latest version available -->
+            <version>2.0.9</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
-    
 </project>

@@ -1,15 +1,13 @@
 package databaseHandlers;
-
 import Connectors.ConnectionProvider;
 import ExceptionHandler.ExceptionHandler;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class categoryFormDatabaseHandlers {
 
-    public static void addCategory(JTable tableCategories, String categoryName, String categoryDescription) {
+    public static boolean addCategory(String categoryName, String categoryDescription) {
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("insert into categories (name, description) values (?, ?)");
@@ -17,28 +15,30 @@ public class categoryFormDatabaseHandlers {
             ps.setString(2, categoryDescription);
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
-                JOptionPane.showMessageDialog(null, "Successfully created category: " + categoryName);
-                populateTable(tableCategories);
+                return true;
             }
         } catch (SQLException ex) {
             ExceptionHandler.unableToConnectToDb(ex);
         }
+        return false;
     }
 
-    public static void populateTable(JTable tableCategories) throws SQLException {
-        DefaultTableModel model = new DefaultTableModel(
-                new Object[]{"ID", "Name", "Description"},0
-        );
-        tableCategories.setModel(model);
+    public List<List<String>> retrieveCategories() {
+        List<List<String>> retData = new ArrayList<>();
         try {
             Connection con = ConnectionProvider.getCon();
             Statement st = con.createStatement();
             ResultSet rs = st.executeQuery("select * from categories");
             while (rs.next()) {
-                model.addRow(new Object[]{rs.getString("category_id"), rs.getString("name"), rs.getString("description")});
+                List<String> rowData = new ArrayList<>();
+                rowData.add(rs.getString("category_id"));
+                rowData.add(rs.getString("name"));
+                rowData.add(rs.getString("description"));
+                retData.add(rowData);
             }
-        } catch(SQLException x) {
-            throw new SQLException(x);
+        } catch(SQLException e) {
+            ExceptionHandler.unableToConnectToDb(e);
         }
+        return retData;
     }
 }

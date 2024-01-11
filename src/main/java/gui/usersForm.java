@@ -181,28 +181,4 @@ public class usersForm extends JDialog implements DataChangeListener {
         userFields.add(status);
         return userFields;
     }
-
-    public JTextField getTxtId() {
-        return txtId;
-    }
-
-    public JTextField getTxtName() {
-        return txtName;
-    }
-
-    public JTextField getTxtEmail() {
-        return txtEmail;
-    }
-
-    public JTextField getTxtPhone() {
-        return txtPhone;
-    }
-
-    public JTextField getTxtAddress() {
-        return txtAddress;
-    }
-
-    public JComboBox getTxtStatus() {
-        return comboBoxStatus;
-    }
 }

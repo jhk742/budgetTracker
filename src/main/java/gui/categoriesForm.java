@@ -3,10 +3,12 @@ import Users.loggedUser;
 import ExceptionHandler.ExceptionHandler;
 import databaseHandlers.categoryFormDatabaseHandlers;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.*;
+import java.util.List;
 
 public class categoriesForm extends JDialog {
 
@@ -19,6 +21,7 @@ public class categoriesForm extends JDialog {
 
     //1. reference to the transactionManagementForm when opened within the txManagementForm
     private String homeFormName;
+    private List<List<String>> tableCategoriesData;
     private categoryFormDatabaseHandlers dbHandler = new categoryFormDatabaseHandlers();
 
     public categoriesForm(JFrame parent, loggedUser loggedU, String formName) {
@@ -37,11 +40,8 @@ public class categoriesForm extends JDialog {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
-                try {
-                    dbHandler.populateTable(tableCategories);
-                } catch (SQLException er) {
-                    ExceptionHandler.unableToConnectToDb(er);
-                }
+                tableCategoriesData = dbHandler.retrieveCategories();
+                populateTable(tableCategoriesData);
             }
         });
 
@@ -60,7 +60,23 @@ public class categoriesForm extends JDialog {
         btnAdd.addActionListener(e -> {
             String name = txtCategoryName.getText();
             String description = txtCategoryDescription.getText();
-            dbHandler.addCategory(tableCategories, name, description);
+            boolean success = dbHandler.addCategory(name, description);
+            if (success) {
+                JOptionPane.showMessageDialog(null, "Successfully created category.");
+                tableCategoriesData = dbHandler.retrieveCategories();
+                populateTable(tableCategoriesData);
+            }
         });
+    }
+
+    private void populateTable(List<List<String>> data) {
+        DefaultTableModel model = new DefaultTableModel(
+                new Object[]{"ID", "Name", "Description"},0
+        );
+        tableCategories.setModel(model);
+        assert model != null;
+        for (List<String> rowData : data) {
+            model.addRow(rowData.toArray());
+        }
     }
 }
