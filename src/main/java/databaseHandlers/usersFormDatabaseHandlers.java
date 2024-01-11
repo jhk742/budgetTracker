@@ -1,26 +1,13 @@
 package databaseHandlers;
-
 import Connectors.ConnectionProvider;
 import ExceptionHandler.ExceptionHandler;
-import Users.User;
-import Users.loggedUser;
-import gui.usersForm;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.sql.*;
 import java.util.ArrayList;
-
-import static gui.usersForm.getUserFields;
+import java.util.List;
 
 public class usersFormDatabaseHandlers {
 
-    public void updateUser(User user, loggedUser loggedU, usersForm uForm) {
-        ArrayList<String> userFields = getUserFields(uForm);
-        //send in original values that match the values stored within the table pre-update
-        String passWord = getUserPassword(Integer.parseInt(user.id), user.name, user.email, user.phone);
-        System.out.println("USER: " + user.id + " " + user.name + " " + user.email + " " + user.phone + " " + passWord);
-
+    public boolean updateUser(String password, ArrayList<String> userFields) {
         try {
             //update with new values provided in the textFields
             Connection con = ConnectionProvider.getCon();
@@ -31,23 +18,19 @@ public class usersFormDatabaseHandlers {
             ps.setString(4, userFields.get(4));
             ps.setInt(5, userFields.get(5).equals("Active") ? 1 : 2);
             ps.setString(6, userFields.get(0));
-            ps.setString(7, passWord);
+            ps.setString(7, password);
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
-                JOptionPane.showMessageDialog(null, "The user information has been successfully updated.");
-                uForm.setVisible(false);
-                usersForm uf = new usersForm(null, loggedU);
-                uf.setVisible(true);
+                return true;
             }
         } catch (SQLException er) {
             ExceptionHandler.unableToConnectToDb(er);
         }
+        return false;
     }
 
-    public void deleteUser(User user, loggedUser loggedU, usersForm uForm) {
+    public boolean deleteUser(String password, ArrayList<String> userFields) {
         //WILL DELETE FROM user & back_accounts table, but not from transaction (this table is a ledger: data retention)
-        ArrayList<String> userFields = getUserFields(uForm);
-        String passWord = getUserPassword(Integer.parseInt(user.id), user.name, user.email, user.phone);
         Connection con = null;
         try {
             con = ConnectionProvider.getCon();
@@ -55,26 +38,22 @@ public class usersFormDatabaseHandlers {
             con.setAutoCommit(false);
 
             //delete bank_accounts
-            PreparedStatement deleteBackAccounts = con.prepareStatement("delete from bank_accounts where user_id = ?");
-            deleteBackAccounts.setInt(1, Integer.parseInt(userFields.get(0)));
-            deleteBackAccounts.executeUpdate();
+            PreparedStatement deleteBankAccounts = con.prepareStatement("delete from bank_accounts where user_id = ?");
+            deleteBankAccounts.setInt(1, Integer.parseInt(userFields.get(0)));
+            int rowsAffectedBankAccounts = deleteBankAccounts.executeUpdate();
 
             //delete the user from the user table
             PreparedStatement ps = con.prepareStatement("delete from user where id=? and name=? and email=? and password=?");
             ps.setInt(1, Integer.parseInt(userFields.get(0)));
             ps.setString(2, userFields.get(1));
             ps.setString(3, userFields.get(2));
-            ps.setString(4, passWord);
-            int rowsAffected = ps.executeUpdate();
+            ps.setString(4, password);
+            int rowsAffectedUser = ps.executeUpdate();
 
             //if both deletions were successful, commit the transaction
             con.commit();
-
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(null, "User successfully deleted.");
-                uForm.setVisible(false);
-                usersForm uf = new usersForm(null, loggedU);
-                uf.setVisible(true);
+            if (rowsAffectedUser > 0 && rowsAffectedBankAccounts > 0) {
+                return true;
             }
         } catch(SQLException er) {
             // rollback the transaction if exception is thrown
@@ -95,9 +74,10 @@ public class usersFormDatabaseHandlers {
                 e.printStackTrace();
             }
         }
+        return false;
     }
 
-    public static String getUserPassword(int id, String name, String email, String phone) {
+    public String getUserPassword(int id, String name, String email, String phone) {
         String ret = "";
         try {
             Connection con = ConnectionProvider.getCon();
@@ -114,23 +94,28 @@ public class usersFormDatabaseHandlers {
         } catch (SQLException e) {
             ExceptionHandler.unableToConnectToDb(e);
         }
-        return null;
+        return ret;
     }
 
-    public void populateTable(JTable tableUsers) {
-        DefaultTableModel model = new DefaultTableModel(
-                new Object[]{"ID","Name","Email","Phone","Address","Status"},0
-        );
-        tableUsers.setModel(model);
+    public List<List<String>> retrieveUsers() {
+        List<List<String>> retData = new ArrayList<>();
         try {
             Connection con = ConnectionProvider.getCon();
-            Statement st = con.createStatement();
-            ResultSet rs = st.executeQuery("select * from user");
+            PreparedStatement ps = con.prepareStatement("select * from user");
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
-                model.addRow(new Object[]{rs.getString("id"), rs.getString("name"), rs.getString("email"), rs.getString("phone"), rs.getString("address"), rs.getString("status").equals("1") ? "Active" : "Inactive"});
+                List<String> rowData = new ArrayList<>();
+                rowData.add(rs.getString("id"));
+                rowData.add(rs.getString("name"));
+                rowData.add(rs.getString("email"));
+                rowData.add(rs.getString("phone"));
+                rowData.add(rs.getString("address"));
+                rowData.add(rs.getString("status"));
+                retData.add(rowData);
             }
         } catch(SQLException e) {
             ExceptionHandler.unableToConnectToDb(e);
         }
+        return retData;
     }
 }

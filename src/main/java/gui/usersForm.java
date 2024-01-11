@@ -3,9 +3,11 @@ import Users.User;
 import Users.loggedUser;
 import databaseHandlers.usersFormDatabaseHandlers;
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class usersForm extends JDialog implements DataChangeListener {
     private JTable tableUsers;
@@ -22,6 +24,8 @@ public class usersForm extends JDialog implements DataChangeListener {
     private JTextField txtPhone;
     private JComboBox comboBoxStatus;
 
+    private List<List<String>> tableUsersData;
+
     //for selected User from table
     private User user = new User();
 
@@ -31,7 +35,8 @@ public class usersForm extends JDialog implements DataChangeListener {
     //via the "Add" button
     @Override
     public void onDataChange() {
-        dbHandler.populateTable(tableUsers);
+        tableUsersData = dbHandler.retrieveUsers();
+        populateTable(tableUsersData);
     }
 
     public usersForm(JFrame parent, loggedUser loggedU) {
@@ -57,7 +62,8 @@ public class usersForm extends JDialog implements DataChangeListener {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
-                dbHandler.populateTable(tableUsers);
+                tableUsersData = dbHandler.retrieveUsers();
+                populateTable(tableUsersData);
             }
         });
 
@@ -97,7 +103,15 @@ public class usersForm extends JDialog implements DataChangeListener {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                dbHandler.updateUser(user, loggedU, usersForm.this);
+                ArrayList<String> userFields = getUserFields(usersForm.this);
+                String userPassword = dbHandler.getUserPassword(Integer.parseInt(user.id), user.name, user.email, user.phone);
+                boolean success = dbHandler.updateUser(userPassword, userFields);
+                if (success) {
+                    JOptionPane.showMessageDialog(null, "The user information has been successfully updated.");
+                    setVisible(false);
+                    usersForm uf = new usersForm(null, loggedU);
+                    uf.setVisible(true);
+                }
             }
         });
 
@@ -112,7 +126,15 @@ public class usersForm extends JDialog implements DataChangeListener {
         });
 
         btnDelete.addActionListener(e -> {
-            dbHandler.deleteUser(user, loggedU, usersForm.this);
+            ArrayList<String> userFields = getUserFields(usersForm.this);
+            String userPassword = dbHandler.getUserPassword(Integer.parseInt(user.id), user.name, user.email, user.phone);
+            boolean success = dbHandler.deleteUser(userPassword, userFields);
+            if (success) {
+                JOptionPane.showMessageDialog(null, "User successfully deleted.");
+                setVisible(false);
+                usersForm uf = new usersForm(null, loggedU);
+                uf.setVisible(true);
+            }
         });
 
         btnReset.addActionListener(e -> {
@@ -132,6 +154,17 @@ public class usersForm extends JDialog implements DataChangeListener {
         });
     }
 
+    private void populateTable(List<List<String>> data) {
+        DefaultTableModel model = new DefaultTableModel(
+                new Object[]{"ID", "Name", "Email", "Phone", "Address", "Status"},0
+        );
+        assert model != null;
+        tableUsers.setModel(model);
+        for (List<String> rowData : data) {
+            model.addRow(rowData.toArray());
+        }
+    }
+
     public static ArrayList<String> getUserFields(usersForm uForm) {
         ArrayList<String> userFields = new ArrayList<>();
         String id = uForm.txtId.getText();
@@ -147,5 +180,29 @@ public class usersForm extends JDialog implements DataChangeListener {
         userFields.add(address);
         userFields.add(status);
         return userFields;
+    }
+
+    public JTextField getTxtId() {
+        return txtId;
+    }
+
+    public JTextField getTxtName() {
+        return txtName;
+    }
+
+    public JTextField getTxtEmail() {
+        return txtEmail;
+    }
+
+    public JTextField getTxtPhone() {
+        return txtPhone;
+    }
+
+    public JTextField getTxtAddress() {
+        return txtAddress;
+    }
+
+    public JComboBox getTxtStatus() {
+        return comboBoxStatus;
     }
 }
