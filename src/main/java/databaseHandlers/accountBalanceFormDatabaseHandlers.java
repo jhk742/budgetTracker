@@ -247,7 +247,7 @@ public class accountBalanceFormDatabaseHandlers {
         return retData;
     }
 
-    public ArrayList<String> populateDateFilterComboBox() {
+    public ArrayList<String> retrieveYearMonth() {
         ArrayList<String> dates = new ArrayList<>();
         try {
             Connection con = ConnectionProvider.getCon();

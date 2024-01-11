@@ -322,7 +322,7 @@ public class AccountBalanceForm extends JDialog {
     }
 
     private void initializeComboBoxes() {
-        List<String> yearMonthOptions = dbHandler.populateDateFilterComboBox();
+        List<String> yearMonthOptions = dbHandler.retrieveYearMonth();
         comboBoxExpensesFilterByDate.addItem("--- Select Year-Month ---");
         comboBoxIncomeFilterByDate.addItem("--- Select Year-Month ---");
         for (String dates : yearMonthOptions) {
