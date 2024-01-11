@@ -1,7 +1,9 @@
 package databaseHandlers;
+
 import Connectors.ConnectionProvider;
 import ExceptionHandler.ExceptionHandler;
 import Users.loggedUser;
+
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
@@ -70,7 +72,8 @@ public class transactionManagementFormDatabaseHandlers {
         return false;
     }
 
-    public void getSetLoggedUserTotalBalance(loggedUser loggedU) {
+    //returns boolean for testing purposes
+    public boolean getSetLoggedUserTotalBalance(loggedUser loggedU) {
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("select * from bank_accounts where user_id=?");
@@ -78,10 +81,12 @@ public class transactionManagementFormDatabaseHandlers {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 loggedU.totalBalance = rs.getBigDecimal("account_balance");
+                return true;
             }
         } catch (SQLException er) {
             ExceptionHandler.unableToConnectToDb(er);
         }
+        return false;
     }
 
     public int getCategoryIdByName(String categoryName) {
@@ -103,8 +108,8 @@ public class transactionManagementFormDatabaseHandlers {
         ArrayList<String> categories = new ArrayList<>();
         try {
             Connection con = ConnectionProvider.getCon();
-            Statement st = con.createStatement();
-            ResultSet rs = st.executeQuery("select name from categories");
+            PreparedStatement ps = con.prepareStatement("select name from categories");
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 categories.add(rs.getString("name"));
             }

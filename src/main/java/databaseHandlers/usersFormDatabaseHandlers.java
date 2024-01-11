@@ -110,7 +110,7 @@ public class usersFormDatabaseHandlers {
                 rowData.add(rs.getString("email"));
                 rowData.add(rs.getString("phone"));
                 rowData.add(rs.getString("address"));
-                rowData.add(rs.getString("status"));
+                rowData.add(rs.getString("status").equals("1") ? "Active" : "Inactive");
                 retData.add(rowData);
             }
         } catch(SQLException e) {

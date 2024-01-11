@@ -119,12 +119,13 @@ public class transactionManagementForm extends JDialog {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String formattedDate = currentDate.format(formatter);
             if(validationStatus) {
-//                boolean success = dbHandler.insertTransaction(option, formattedDate, description, amount, type, loggedU, runningBalance, categoryId, paymentMethod, location);
                 if (dbHandler.insertTransaction(option, formattedDate, description, amount, type, loggedU, runningBalance, categoryId, paymentMethod, location)) {
                     if(dbHandler.updateBankAccount(option, loggedU, amount)) {
                         JOptionPane.showMessageDialog(null, "Transaction created successfully!");
                     }
                     dbHandler.getSetLoggedUserTotalBalance(loggedU);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Could not create transaction.");
                 }
                 lblTotalBalance.setText(String.valueOf(loggedU.totalBalance));
                 resetFields((type.equals("Expense")));

@@ -13,4 +13,11 @@ public class loggedUser {
     public BigDecimal totalBalance;
     public BigDecimal totalIncome;
     public BigDecimal totalExpense;
+
+    public loggedUser() {}
+
+    //for testing purposes
+    public loggedUser(String id) {
+        this.id = id;
+    }
 }
