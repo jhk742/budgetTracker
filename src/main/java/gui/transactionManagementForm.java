@@ -41,7 +41,7 @@ public class transactionManagementForm extends JDialog {
         setModal(true);
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        dbHandler.getSetLoggedUserTotalBalance(loggedU);
+//        dbHandler.getSetLoggedUserTotalBalance(loggedU);
 
         //upon opening form
         addWindowListener(new WindowAdapter() {
@@ -99,6 +99,7 @@ public class transactionManagementForm extends JDialog {
         });
 
         btnSubmit.addActionListener(e -> {
+            int categoryId = 0;
             String categoryName = "";
             String paymentMethod = "";
             String location = "";
@@ -112,12 +113,19 @@ public class transactionManagementForm extends JDialog {
                 categoryName = String.valueOf(comboBoxCategory.getSelectedItem());
                 paymentMethod = String.valueOf(comboBoxPaymentMethod.getSelectedItem());
                 location = txtLocation.getText();
+                categoryId = dbHandler.getCategoryIdByName(categoryName);
             }
             LocalDate currentDate = LocalDate.now();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             String formattedDate = currentDate.format(formatter);
             if(validationStatus) {
-                dbHandler.insertTransaction(option, formattedDate, description, amount, type, loggedU, runningBalance, categoryName, paymentMethod, location);
+//                boolean success = dbHandler.insertTransaction(option, formattedDate, description, amount, type, loggedU, runningBalance, categoryId, paymentMethod, location);
+                if (dbHandler.insertTransaction(option, formattedDate, description, amount, type, loggedU, runningBalance, categoryId, paymentMethod, location)) {
+                    if(dbHandler.updateBankAccount(option, loggedU, amount)) {
+                        JOptionPane.showMessageDialog(null, "Transaction created successfully!");
+                    }
+                    dbHandler.getSetLoggedUserTotalBalance(loggedU);
+                }
                 lblTotalBalance.setText(String.valueOf(loggedU.totalBalance));
                 resetFields((type.equals("Expense")));
             } else {

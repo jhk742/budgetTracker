@@ -1,23 +1,18 @@
 package databaseHandlers;
-
 import Connectors.ConnectionProvider;
 import ExceptionHandler.ExceptionHandler;
 import Users.loggedUser;
-
-import javax.swing.*;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 
 public class transactionManagementFormDatabaseHandlers {
 
-    public void insertTransaction(String option, String formattedDate, String description, BigDecimal amount, String type, loggedUser loggedU, BigDecimal runningBalance, String categoryName, String paymentMethod, String location) {
+    public boolean insertTransaction(String option, String formattedDate, String description, BigDecimal amount, String type, loggedUser loggedU, BigDecimal runningBalance, int categoryId, String paymentMethod, String location) {
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = null;
             if (option.equals("Expense")) {
-                // first retrieve the category id
-                int categoryId = getCategoryIdByName(categoryName);
                 ps = con.prepareStatement("INSERT INTO transactions (date, description, amount, category_id, " +
                         "type, account_id, running_balance, payment_method, location) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -32,7 +27,7 @@ public class transactionManagementFormDatabaseHandlers {
                 ps.setString(9, location);
                 int rowsAffectedTransaction = ps.executeUpdate();
                 if (rowsAffectedTransaction > 0) {
-                    updateBankAccount("Expense", loggedU, amount);
+                    return true;
                 }
             }
             if (option.equals("Income")) {
@@ -47,17 +42,16 @@ public class transactionManagementFormDatabaseHandlers {
                 ps.setBigDecimal(6, runningBalance);
                 int rowsAffectedTransaction = ps.executeUpdate();
                 if (rowsAffectedTransaction > 0) {
-                    updateBankAccount("Income", loggedU, amount);
+                    return true;
                 }
             }
-            //update to show new balance and reset all other fields to default (blanks)
-            getSetLoggedUserTotalBalance(loggedU);
         } catch (SQLException er) {
             ExceptionHandler.unableToConnectToDb(er);
         }
+        return false;
     }
 
-    private static void updateBankAccount(String option, loggedUser loggedU, BigDecimal amount) {
+    public boolean updateBankAccount(String option, loggedUser loggedU, BigDecimal amount) {
         try {
             Connection con = ConnectionProvider.getCon();
             String updateQuery = "update bank_accounts set account_balance = "
@@ -68,11 +62,12 @@ public class transactionManagementFormDatabaseHandlers {
             psBankAccounts.setInt(2, Integer.parseInt(loggedU.id));
             int rowsAffectedBankAccount = psBankAccounts.executeUpdate();
             if (rowsAffectedBankAccount > 0) {
-                JOptionPane.showMessageDialog(null, "Transaction created successfully!");
+                return true;
             }
         } catch (SQLException e) {
             ExceptionHandler.unableToConnectToDb(e);
         }
+        return false;
     }
 
     public void getSetLoggedUserTotalBalance(loggedUser loggedU) {
@@ -89,7 +84,7 @@ public class transactionManagementFormDatabaseHandlers {
         }
     }
 
-    private static int getCategoryIdByName(String categoryName) {
+    public int getCategoryIdByName(String categoryName) {
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("select category_id from categories where name=?");
