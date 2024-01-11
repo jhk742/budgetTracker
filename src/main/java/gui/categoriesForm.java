@@ -1,13 +1,11 @@
 package gui;
 import Users.loggedUser;
-import ExceptionHandler.ExceptionHandler;
 import databaseHandlers.categoryFormDatabaseHandlers;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.sql.*;
 import java.util.List;
 
 public class categoriesForm extends JDialog {
