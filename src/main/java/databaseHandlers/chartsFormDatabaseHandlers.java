@@ -74,13 +74,12 @@ public class chartsFormDatabaseHandlers {
                         " SELECT\n" +
                         " *,\n" +
                         " ROW_NUMBER() OVER (PARTITION BY date ORDER BY transaction_id DESC) AS row_num\n" +
-                        " FROM transactions\n" +
-                        " )\n" +
+                        " FROM transactions)\n" +
                         " SELECT\n" +
                         " date,\n" +
                         " running_balance\n" +
                         " FROM RankedTransactions\n" +
-                        " WHERE row_num = 1;\n");
+                        " WHERE row_num = 1");
             }
         } catch (SQLException e) {
             ExceptionHandler.unableToConnectToDb(e);
