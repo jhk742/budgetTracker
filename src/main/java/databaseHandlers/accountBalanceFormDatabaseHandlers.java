@@ -2,6 +2,8 @@ package databaseHandlers;
 import Connectors.ConnectionProvider;
 import ExceptionHandler.ExceptionHandler;
 import Users.loggedUser;
+
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,7 +13,8 @@ import java.util.List;
 
 public class accountBalanceFormDatabaseHandlers {
 
-    public void getLoggedUserTotalBalance(loggedUser loggedU) {
+    //returns retrieved value for testing purposes
+    public BigDecimal getSetLoggedUserTotalBalance(loggedUser loggedU) {
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("select * from bank_accounts where user_id=?");
@@ -19,13 +22,17 @@ public class accountBalanceFormDatabaseHandlers {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 loggedU.totalBalance = rs.getBigDecimal("account_balance");
+                return rs.getBigDecimal("account_balance");
             }
         } catch (SQLException e) {
             ExceptionHandler.unableToConnectToDb(e);
         }
+        return new BigDecimal(-1);
     }
 
-    public void getLoggedUserTotalIncomeAndExpense(loggedUser loggedU) {
+    //returns retrieved values for testing purposes
+    public List<BigDecimal> getSetLoggedUserTotalIncomeAndExpense(loggedUser loggedU) {
+        List<BigDecimal> retData = new ArrayList<>();
         try {
             Connection con = ConnectionProvider.getCon();
             PreparedStatement ps = con.prepareStatement("SELECT SUM(CASE WHEN type = 'Income' THEN amount ELSE 0 END) AS total_income, " +
@@ -36,10 +43,14 @@ public class accountBalanceFormDatabaseHandlers {
             if (rs.next()) {
                 loggedU.totalIncome = rs.getBigDecimal("total_income");
                 loggedU.totalExpense = rs.getBigDecimal("total_expense");
+                retData.add(rs.getBigDecimal("total_income"));
+                retData.add(rs.getBigDecimal("total_expense"));
+                return retData;
             }
         } catch (SQLException e) {
             ExceptionHandler.unableToConnectToDb(e);
         }
+        return retData;
     }
 
     public List<List<String>> retrieveDataForAll(loggedUser loggedU, String filterOption, String startDate, String endDate) {

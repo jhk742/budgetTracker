@@ -80,9 +80,9 @@ public class AccountBalanceForm extends JDialog {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
-                dbHandler.getLoggedUserTotalBalance(loggedU);
+                dbHandler.getSetLoggedUserTotalBalance(loggedU);
                 lblTotalBalance.setText("$" + loggedU.totalBalance);
-                dbHandler.getLoggedUserTotalIncomeAndExpense(loggedU);
+                dbHandler.getSetLoggedUserTotalIncomeAndExpense(loggedU);
                 lblTotalIncome.setText("$" + loggedU.totalIncome);
                 lblTotalExpenses.setText("$" + loggedU.totalExpense);
                 lblUserName.setText(loggedU.name);
