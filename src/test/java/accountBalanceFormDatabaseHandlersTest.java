@@ -32,8 +32,12 @@ public class accountBalanceFormDatabaseHandlersTest {
     private PreparedStatement mockRetrieveDataForAllIncomePS;
     private PreparedStatement mockRetrieveDataForAllExpensesPS;
     private PreparedStatement mockRetrieveDataForAllDateRangePS;
-    private PreparedStatement mockRetrieveDataForIncomePS;
-    private PreparedStatement mockRetrieveDataForExpensePS;
+    private PreparedStatement mockRetrieveDataForIncomeDefaultPS;
+    private PreparedStatement mockRetrieveDataForIncomeYearMonthPS;
+    private PreparedStatement mockRetrieveDataForIncomeDateRangePS;
+    private PreparedStatement mockRetrieveDataForExpenseDefaultPS;
+    private PreparedStatement mockRetrieveDataForExpenseYearMonthPS;
+    private PreparedStatement mockRetrieveDataForExpenseDateRangePS;
     private PreparedStatement mockRetrieveYearMonthPS;
     private ResultSet mockResultSet;
     private loggedUser loggedU;
@@ -49,8 +53,12 @@ public class accountBalanceFormDatabaseHandlersTest {
         mockRetrieveDataForAllIncomePS = mock(PreparedStatement.class);
         mockRetrieveDataForAllExpensesPS = mock(PreparedStatement.class);
         mockRetrieveDataForAllDateRangePS = mock(PreparedStatement.class);
-        mockRetrieveDataForIncomePS = mock(PreparedStatement.class);
-        mockRetrieveDataForExpensePS = mock(PreparedStatement.class);
+        mockRetrieveDataForIncomeDefaultPS = mock(PreparedStatement.class);
+        mockRetrieveDataForIncomeYearMonthPS = mock(PreparedStatement.class);
+        mockRetrieveDataForIncomeDateRangePS = mock(PreparedStatement.class);
+        mockRetrieveDataForExpenseDefaultPS = mock(PreparedStatement.class);
+        mockRetrieveDataForExpenseYearMonthPS = mock(PreparedStatement.class);
+        mockRetrieveDataForExpenseDateRangePS = mock(PreparedStatement.class);
         mockRetrieveYearMonthPS = mock(PreparedStatement.class);
         mockResultSet = mock(ResultSet.class);
         databaseHandlers = new accountBalanceFormDatabaseHandlers();
@@ -125,30 +133,58 @@ public class accountBalanceFormDatabaseHandlersTest {
                 "\tcategories c ON t.category_id = c.category_id\n" +
                 "WHERE t.account_id = ? AND (t.type='Expense' OR t.category_id IS NULL) AND t.date BETWEEN ? AND ?"))
                 .thenReturn(mockRetrieveDataForAllDateRangePS);
-        when(mockConnection.prepareStatement("SELECT amount, type, running_balance, date\n" +
-                "FROM transactions WHERE type = 'Income' AND account_id = ?"))
-                .thenReturn(mockRetrieveDataForIncomePS);
+        when(mockConnection.prepareStatement("SELECT\n" +
+                "   amount,\n" +
+                "   type,\n" +
+                "   running_balance,\n" +
+                "   date\n" +
+                "FROM\n" +
+                "   transactions\n" +
+                "WHERE type = 'Income' AND account_id = ?"))
+                .thenReturn(mockRetrieveDataForIncomeDefaultPS);
         when(mockConnection.prepareStatement("SELECT t.amount, t.type, t.running_balance, t.date\n" +
-                " FROM transactions t LEFT JOIN categories c ON t.category_id = c.category_id\n" +
-                " WHERE t.account_id = ? AND t.type = 'Income' AND YEAR(t.date) = ? AND MONTH(t.date) = ?"))
-                .thenReturn(mockRetrieveDataForIncomePS);
+                " FROM transactions t\n" +
+                " LEFT JOIN categories c ON t.category_id = c.category_id\n" +
+                " WHERE t.account_id = ? AND t.type = 'Income'\n" +
+                " AND YEAR(t.date) = ? AND MONTH(t.date) = ?"))
+                .thenReturn(mockRetrieveDataForIncomeYearMonthPS);
         when(mockConnection.prepareStatement("SELECT amount, type, running_balance, date " +
-                "FROM transactions WHERE type = 'Income' AND account_id = ? AND date BETWEEN ? AND ?"))
-                .thenReturn(mockRetrieveDataForIncomePS);
+                "FROM transactions\n" +
+                "WHERE\n" +
+                "type = 'Income' AND account_id = ? AND date BETWEEN ? AND ?"))
+                .thenReturn(mockRetrieveDataForIncomeDateRangePS);
+        when(mockConnection.prepareStatement("SELECT\n" +
+                        "    t.amount,\n" +
+                        "    t.type,\n" +
+                        "    t.running_balance,\n" +
+                        "    t.payment_method,\n" +
+                        "    t.category_id,\n" +
+                        "    c.name,\n" +
+                        "    t.description,\n" +
+                        "    t.date\n" +
+                        "FROM\n" +
+                        "    transactions t\n" +
+                        "INNER JOIN\n" +
+                        "    categories c ON t.category_id = c.category_id\n" +
+                        "WHERE\n" +
+                        "    t.type = 'Expense'\n" +
+                        "    AND t.account_id = ?"))
+                .thenReturn(mockRetrieveDataForExpenseDefaultPS);
         when(mockConnection.prepareStatement("SELECT t.amount, t.type, t.running_balance, t.payment_method, t.category_id, c.name, t.description, t.date\n" +
-                "FROM transactions t INNER JOIN categories c ON t.category_id = c.category_id\n" +
-                "WHERE t.type = 'Expense' AND t.account_id = ?"))
-                .thenReturn(mockRetrieveDataForExpensePS);
+                " FROM transactions t\n" +
+                " LEFT JOIN categories c ON t.category_id = c.category_id\n" +
+                " WHERE t.account_id = ? AND t.type = 'Expense'\n" +
+                " AND YEAR(t.date) = ? AND MONTH(t.date) = ?"))
+                .thenReturn(mockRetrieveDataForExpenseYearMonthPS);
         when(mockConnection.prepareStatement("SELECT t.amount, t.type, t.running_balance, t.payment_method, t.category_id, c.name, t.description, t.date\n" +
-                " FROM transactions t LEFT JOIN categories c ON t.category_id = c.category_id\n" +
-                " WHERE t.account_id = ? AND t.type = 'Expense' AND YEAR(t.date) = ? AND MONTH(t.date) = ?"))
-                .thenReturn(mockRetrieveDataForExpensePS);
-        when(mockConnection.prepareStatement("SELECT t.amount, t.type, t.running_balance, t.payment_method, t.category_id, c.name, t.description, t.date\n" +
-                "FROM transactions t INNER JOIN categories c ON t.category_id = c.category_id\n" +
-                "WHERE t.type = 'Expense' AND t.account_id = ? AND t.date BETWEEN ? AND ?"))
-                .thenReturn(mockRetrieveDataForExpensePS);
+                "FROM transactions t\n" +
+                "INNER JOIN categories c ON t.category_id = c.category_id\n" +
+                "WHERE t.type = 'Expense'\n" +
+                "AND t.account_id = ? AND t.date BETWEEN ? AND ?"))
+                .thenReturn(mockRetrieveDataForExpenseDateRangePS);
         when(mockConnection.prepareStatement("SELECT DISTINCT " +
-                "CONCAT(YEAR(date), '-', LPAD(MONTH(date), 2, '0')) AS 'year_month' FROM transactions " +
+                "CONCAT(YEAR(date), '-', LPAD(MONTH(date), 2, '0')) AS 'year_month' " +
+                "FROM transactions " +
                 "ORDER BY 'year_month' DESC"))
                 .thenReturn(mockRetrieveYearMonthPS);
     }
@@ -328,6 +364,213 @@ public class accountBalanceFormDatabaseHandlersTest {
         List<List<String>> actualResults = databaseHandlers.retrieveDataForAll(loggedU, "DateRange", "2024-01-01", "2024-01-02");
         assertEquals(new ArrayList<List<String>>(), actualResults);
         verify(mockRetrieveDataForAllDateRangePS, times(1)).executeQuery();
+        verify(mockResultSet, times(1)).next();
+    }
+
+    @Test
+    public void retrieveDataForIncomeDefaultSuccess() throws SQLException {
+        List<List<String>> expectedResults = new ArrayList<>(
+                Arrays.asList(
+                        Arrays.asList("113", "Income", "225", "2023-12-29"),
+                        Arrays.asList("54", "Income", "279", "2023-12-31")
+                )
+        );
+        when(mockRetrieveDataForIncomeDefaultPS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true, true, false);
+        when(mockResultSet.getString("amount")).thenReturn("113", "54");
+        when(mockResultSet.getString("type")).thenReturn("Income", "Income");
+        when(mockResultSet.getString("running_balance")).thenReturn("225", "279");
+        when(mockResultSet.getString("date")).thenReturn("2023-12-29", "2023-12-31");
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForIncome(loggedU, false, 0, 0, false, "", "");
+        assertEquals(expectedResults, actualResults);
+        verify(mockRetrieveDataForIncomeDefaultPS, times(1)).executeQuery();
+        verify(mockResultSet, times(3)).next();
+    }
+
+    @Test
+    public void retrieveDataForIncomeDefaultFailure() throws SQLException {
+        when(mockRetrieveDataForIncomeDefaultPS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForIncome(loggedU, false, 0, 0, false, "", "");
+        assertEquals(new ArrayList<>(), actualResults);
+        verify(mockRetrieveDataForIncomeDefaultPS, times(1)).executeQuery();
+        verify(mockResultSet, times(1)).next();
+    }
+
+    @Test
+    public void retrieveDataForIncomeYearMonthSuccess() throws SQLException {
+        List<List<String>> expectedResults = new ArrayList<>(
+                Arrays.asList(
+                        Arrays.asList("113", "Income", "225", "2023-12-29"),
+                        Arrays.asList("54", "Income", "279", "2023-12-31")
+                )
+        );
+        when(mockRetrieveDataForIncomeYearMonthPS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true, true, false);
+        when(mockResultSet.getString("amount")).thenReturn("113", "54");
+        when(mockResultSet.getString("type")).thenReturn("Income", "Income");
+        when(mockResultSet.getString("running_balance")).thenReturn("225", "279");
+        when(mockResultSet.getString("date")).thenReturn("2023-12-29", "2023-12-31");
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForIncome(loggedU, true, 2023, 12, false, "", "");
+        assertEquals(expectedResults, actualResults);
+        verify(mockRetrieveDataForIncomeYearMonthPS, times(1)).executeQuery();
+        verify(mockResultSet, times(3)).next();
+    }
+
+    @Test
+    public void retrieveDataForIncomeYearMonthFailure() throws SQLException {
+        when(mockRetrieveDataForIncomeYearMonthPS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForIncome(loggedU, true, 2023, 12, false, "", "");
+        assertEquals(new ArrayList<>(), actualResults);
+        verify(mockRetrieveDataForIncomeYearMonthPS, times(1)).executeQuery();
+        verify(mockResultSet, times(1)).next();
+    }
+
+    @Test
+    public void retrieveDataForIncomeDateRangePSSuccess() throws SQLException {
+        List<List<String>> expectedResults = new ArrayList<>(
+                Arrays.asList(
+                        Arrays.asList("113", "Income", "225", "2023-12-29"),
+                        Arrays.asList("54", "Income", "279", "2023-12-30")
+                )
+        );
+        when(mockRetrieveDataForIncomeDateRangePS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true, true, false);
+        when(mockResultSet.getString("amount")).thenReturn("113", "54");
+        when(mockResultSet.getString("type")).thenReturn("Income", "Income");
+        when(mockResultSet.getString("running_balance")).thenReturn("225", "279");
+        when(mockResultSet.getString("date")).thenReturn("2023-12-29", "2023-12-30");
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForIncome(loggedU, false, 0, 0, true, "2023-12-29", "2023-12-30");
+        assertEquals(expectedResults, actualResults);
+        verify(mockRetrieveDataForIncomeDateRangePS, times(1)).executeQuery();
+        verify(mockResultSet, times(3)).next();
+    }
+
+    @Test
+    public void retrieveDataForExpenseDefaultSuccess() throws SQLException {
+        List<List<String>> expectedResults = new ArrayList<>(
+                Arrays.asList(
+                        Arrays.asList("100", "Expense", "450", "Card", "6", "misc", "a selection of multiple things", "2023-12-29"),
+                        Arrays.asList("200", "Expense", "250", "Cash", "7", "food", "food", "2023-12-30")
+                )
+        );
+        when(mockRetrieveDataForExpenseDefaultPS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true, true, false);
+        when(mockResultSet.getString("amount")).thenReturn("100", "200");
+        when(mockResultSet.getString("type")).thenReturn("Expense", "Expense");
+        when(mockResultSet.getString("running_balance")).thenReturn("450", "250");
+        when(mockResultSet.getString("payment_method")).thenReturn("Card", "Cash");
+        when(mockResultSet.getString("category_id")).thenReturn("6", "7");
+        when(mockResultSet.getString("name")).thenReturn("misc", "food");
+        when(mockResultSet.getString("description")).thenReturn("a selection of multiple things", "food");
+        when(mockResultSet.getString("date")).thenReturn("2023-12-29", "2023-12-30");
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForExpense(loggedU, false, 0, 0, false, "" ,"");
+        assertEquals(expectedResults, actualResults);
+        verify(mockRetrieveDataForExpenseDefaultPS, times(1)).executeQuery();
+        verify(mockResultSet, times(3)).next();
+    }
+
+    @Test
+    public void retrieveDataForExpenseDefaultFailure() throws SQLException {
+        when(mockRetrieveDataForExpenseDefaultPS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForExpense(loggedU, false, 0, 0, false, "" ,"");
+        assertEquals(new ArrayList<>(), actualResults);
+        verify(mockRetrieveDataForExpenseDefaultPS, times(1)).executeQuery();
+        verify(mockResultSet, times(1)).next();
+    }
+
+    @Test
+    public void retrieveDataForExpenseYearMonthSuccess() throws SQLException {
+        List<List<String>> expectedResults = new ArrayList<>(
+                Arrays.asList(
+                        Arrays.asList("100", "Expense", "450", "Card", "6", "misc", "a selection of multiple things", "2024-01-01"),
+                        Arrays.asList("200", "Expense", "250", "Cash", "7", "food", "food", "2024-01-02")
+                )
+        );
+        when(mockRetrieveDataForExpenseYearMonthPS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true, true, false);
+        when(mockResultSet.getString("amount")).thenReturn("100", "200");
+        when(mockResultSet.getString("type")).thenReturn("Expense", "Expense");
+        when(mockResultSet.getString("running_balance")).thenReturn("450", "250");
+        when(mockResultSet.getString("payment_method")).thenReturn("Card", "Cash");
+        when(mockResultSet.getString("category_id")).thenReturn("6", "7");
+        when(mockResultSet.getString("name")).thenReturn("misc", "food");
+        when(mockResultSet.getString("description")).thenReturn("a selection of multiple things", "food");
+        when(mockResultSet.getString("date")).thenReturn("2024-01-01", "2024-01-02");
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForExpense(loggedU, true, 2024, 1, false, "" ,"");
+        assertEquals(expectedResults, actualResults);
+        verify(mockRetrieveDataForExpenseYearMonthPS, times(1)).executeQuery();
+        verify(mockResultSet, times(3)).next();
+    }
+
+    @Test
+    public void retrieveDataForExpenseYearMonthFailure() throws SQLException {
+        when(mockRetrieveDataForExpenseYearMonthPS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForExpense(loggedU, true, 2024, 1, false, "" ,"");
+        assertEquals(new ArrayList<>(), actualResults);
+        verify(mockRetrieveDataForExpenseYearMonthPS, times(1)).executeQuery();
+        verify(mockResultSet, times(1)).next();
+    }
+
+    @Test
+    public void retrieveDataForExpenseDateRangeSuccess() throws SQLException {
+        List<List<String>> expectedResults = new ArrayList<>(
+                Arrays.asList(
+                        Arrays.asList("100", "Expense", "450", "Card", "6", "misc", "a selection of multiple things", "2023-12-31"),
+                        Arrays.asList("200", "Expense", "250", "Cash", "7", "food", "food", "2024-01-01")
+                )
+        );
+        when(mockRetrieveDataForExpenseDateRangePS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true, true, false);
+        when(mockResultSet.getString("amount")).thenReturn("100", "200");
+        when(mockResultSet.getString("type")).thenReturn("Expense", "Expense");
+        when(mockResultSet.getString("running_balance")).thenReturn("450", "250");
+        when(mockResultSet.getString("payment_method")).thenReturn("Card", "Cash");
+        when(mockResultSet.getString("category_id")).thenReturn("6", "7");
+        when(mockResultSet.getString("name")).thenReturn("misc", "food");
+        when(mockResultSet.getString("description")).thenReturn("a selection of multiple things", "food");
+        when(mockResultSet.getString("date")).thenReturn("2023-12-31", "2024-01-01");
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForExpense(loggedU, false, 0, 0, true, "2023-12-31" ,"2024-01-01");
+        assertEquals(expectedResults, actualResults);
+        verify(mockRetrieveDataForExpenseDateRangePS, times(1)).executeQuery();
+        verify(mockResultSet, times(3)).next();
+    }
+
+    @Test
+    public void retrieveDataForExpenseDateRangeFailure() throws SQLException {
+        when(mockRetrieveDataForExpenseDateRangePS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+        List<List<String>> actualResults = databaseHandlers.retrieveDataForExpense(loggedU, false, 0, 0, true, "2023-12-31" ,"2024-01-01");
+        assertEquals(new ArrayList<>(), actualResults);
+        verify(mockRetrieveDataForExpenseDateRangePS, times(1)).executeQuery();
+        verify(mockResultSet, times(1)).next();
+    }
+
+    @Test
+    public void retrieveYearMonthSuccess() throws SQLException {
+        //mockRetrieveYearMonthPS
+        List<String> expectedResults = new ArrayList<>(
+                Arrays.asList("2023-11", "2023-12", "2024-01")
+        );
+        when(mockRetrieveYearMonthPS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(true, true, true, false);
+        when(mockResultSet.getString("year_month")).thenReturn("2023-11", "2023-12", "2024-01");
+        List<String> actualResults = databaseHandlers.retrieveYearMonth();
+        assertEquals(expectedResults, actualResults);
+        verify(mockRetrieveYearMonthPS, times(1)).executeQuery();
+        verify(mockResultSet, times(4)).next();
+    }
+
+    @Test
+    public void retrieveYearMonthFailure() throws SQLException {
+        when(mockRetrieveYearMonthPS.executeQuery()).thenReturn(mockResultSet);
+        when(mockResultSet.next()).thenReturn(false);
+        List<String> actualResults = databaseHandlers.retrieveYearMonth();
+        assertEquals(new ArrayList<>(), actualResults);
+        verify(mockRetrieveYearMonthPS, times(1)).executeQuery();
         verify(mockResultSet, times(1)).next();
     }
 }

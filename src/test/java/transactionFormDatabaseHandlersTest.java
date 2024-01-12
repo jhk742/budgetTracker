@@ -169,13 +169,14 @@ public class transactionFormDatabaseHandlersTest {
 
     @Test
     public void retrieveCategoriesSuccess() throws SQLException {
-        ArrayList<String> expectedResult = new ArrayList<>(Arrays.asList("testCategoryName"));
+        ArrayList<String> expectedResult = new ArrayList<>(Arrays.asList("testCategoryName", "anotherCategory"));
         when(mockRetrieveCategoriesPS.executeQuery()).thenReturn(mockResultSet);
-        when(mockResultSet.next()).thenReturn(true);
-        when(mockResultSet.getString("name")).thenReturn("testCategoryName");
+        when(mockResultSet.next()).thenReturn(true, true, false);
+        when(mockResultSet.getString("name")).thenReturn("testCategoryName", "anotherCategory");
         ArrayList<String> actualResult = databaseHandlers.retrieveCategories();
         assertEquals(expectedResult, actualResult);
         verify(mockRetrieveCategoriesPS, times(1)).executeQuery();
+        verify(mockResultSet, times(3)).next();
     }
 }
 
