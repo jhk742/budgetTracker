@@ -18,7 +18,7 @@ chmod +x initialRun.sh
 
 ## Features
 As of the current release, the application encompasses the following key features:
-1. **User Management**: Empowers administrators to effectively manage and modify account information for application users. This functionality is exclusively accessible to administrator accounts, which are created during the initial configuration process executed by running the provided bash script..
+1. **User Management**: Empowers administrators to effectively manage and modify account information for application users. This functionality is exclusively accessible to administrator accounts, which are created during the initial configuration process executed by running the provided bash script.
 2. **Category Management**: Enables users to create personalized categories, enhancing the flexibility and precision of transaction categorization within the application.
 3. **Transaction Management**: Empowers users to securely store and organize transactions, seamlessly handling both income and expense entries.
 4. **Account Balance**: Enables users to review their complete transaction history, offering additional filtering options for a more detailed account overview.
