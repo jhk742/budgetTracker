@@ -75,40 +75,56 @@ public class accountBalanceFormDatabaseHandlers {
             }
             if (filterOption.equals("Income")) {
                 ps = con.prepareStatement("SELECT\n" +
-                        "\tt.amount,\n" +
+                        "    t.amount,\n" +
                         "    t.type,\n" +
                         "    t.running_balance,\n" +
                         "    t.category_id,\n" +
                         "    c.name,\n" +
                         "    t.date\n" +
                         "FROM\n" +
-                        "\ttransactions t\n" +
+                        "    transactions t\n" +
                         "LEFT JOIN\n" +
-                        "\tcategories c ON t.category_id = c.category_id\n" +
-                        "WHERE t.account_id = ? AND (t.type='Expense' OR t.category_id IS NULL)\n" +
-                        "ORDER BY CASE\n" +
-                        "\tWHEN type = 'Income' THEN 1\n" +
-                        "    WHEN type = 'Expense' THEN 2\n" +
-                        "END");
+                        "    categories c ON t.category_id = c.category_id\n" +
+                        "WHERE\n" +
+                        "    t.account_id = ? AND (t.type='Expense' OR t.category_id IS NULL)\n" +
+                        "ORDER BY\n" +
+                        "\tCASE\n" +
+                        "        WHEN t.type = 'Income' THEN 1\n" +
+                        "        WHEN t.type = 'Expense' THEN 2\n" +
+                        "    END,\n" +
+                        "    CASE\n" +
+                        "        WHEN t.type = 'Expense' THEN t.date\n" +
+                        "    END ASC,\n" +
+                        "    CASE\n" +
+                        "        WHEN t.type = 'Income' THEN t.date\n" +
+                        "    END ASC");
                 ps.setString(1, loggedU.id);
             }
             if (filterOption.equals("Expenses")) {
                 ps = con.prepareStatement("SELECT\n" +
-                        "\tt.amount,\n" +
+                        "    t.amount,\n" +
                         "    t.type,\n" +
                         "    t.running_balance,\n" +
                         "    t.category_id,\n" +
                         "    c.name,\n" +
                         "    t.date\n" +
                         "FROM\n" +
-                        "\ttransactions t\n" +
+                        "    transactions t\n" +
                         "LEFT JOIN\n" +
-                        "\tcategories c ON t.category_id = c.category_id\n" +
-                        "WHERE t.account_id = ? AND (t.type='Expense' OR t.category_id IS NULL)\n" +
-                        "ORDER BY CASE\n" +
-                        "\tWHEN type = 'Expense' THEN 1\n" +
-                        "    WHEN type = 'Income' THEN 2\n" +
-                        "END");
+                        "    categories c ON t.category_id = c.category_id\n" +
+                        "WHERE\n" +
+                        "    t.account_id = ? AND (t.type='Expense' OR t.category_id IS NULL)\n" +
+                        "ORDER BY\n" +
+                        "\tCASE\n" +
+                        "        WHEN t.type = 'Expense' THEN 1\n" +
+                        "        WHEN t.type = 'Income' THEN 2\n" +
+                        "    END,\n" +
+                        "    CASE\n" +
+                        "        WHEN t.type = 'Expense' THEN t.date\n" +
+                        "    END ASC,\n" +
+                        "    CASE\n" +
+                        "        WHEN t.type = 'Income' THEN t.date\n" +
+                        "    END ASC");
                 ps.setString(1, loggedU.id);
             }
             if (filterOption.equals("DateRange")) {

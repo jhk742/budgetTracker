@@ -27,8 +27,16 @@ while true; do
       read -p "MySQL Port: " MYSQL_PORT
       read -p "MySQL User: " MYSQL_USER
       read -s -p "MySQL Password: " MYSQL_PASSWORD
+
+      # creating a configuration file
+      echo "[client]" > "$(dirname "$0")/.my.cnf"
+      echo "user=$MYSQL_USER" >> "$(dirname "$0")/.my.cnf"
+      echo "password=$MYSQL_PASSWORD" >> "$(dirname "$0")/.my.cnf"
+      echo "jdbcUrl=jdbc:mysql://$MYSQL_HOST:$MYSQL_PORT/budgettracker?useTimezone=true&serverTimezone=Asia/Seoul" >> "$(dirname "$0")/.my.cnf"
+
       MYSQL_COMMAND="mysql -h $MYSQL_HOST -P $MYSQL_PORT -u $MYSQL_USER -p$MYSQL_PASSWORD"
       # Create the database
+      echo
       echo "Creating database and associated tables..."
       $MYSQL_COMMAND -e "CREATE DATABASE IF NOT EXISTS budget_tracker_test;"
 
