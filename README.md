@@ -46,7 +46,7 @@ The application makes use of the following technologies, libraries, and framewor
 1. **Build and Dependency Management**: Maven
 2. **Database**: MySQL, AWS-RDS
 3. **User Interface**: JSwing
-4. **API Calls**: Apache HTTPClient (https://www.exchangerate-api.com/)https://www.exchangerate-api.com/)
+4. **API Calls**: Apache HTTPClient [ExchangeRate-API](https://www.exchangerate-api.com/)
 5. **JSON Handling**: org.json
 6. **Web Scraping**: jsoup
 7. **Visualiztion**: JFreeChart
