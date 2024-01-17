@@ -4,7 +4,7 @@ Makes use of a MySQL database (currently supports on-premise databases...working
 to help visualize user-specific data.
 
 ## Configuration
-Prior to launching the application, please ensure that you run the provided bash script file, "intialRun.sh", as it will guide you through the configuration process
+Prior to launching the application, please ensure that you run the provided bash script file, **intialRun.sh**, as it will guide you through the configuration process
 of the on-premise database and its associated tables, components of the application that are crucial for its operation.
 1. **Run the Bash Script**
    - Navigate to the root directory of the cloned repository.
