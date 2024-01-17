@@ -26,7 +26,7 @@
                     <source>1.8</source>
                     <target>1.8</target>
                     <compilerArgs>
-                        <args>Xbootclasspath/p:${java.home}/lib</args>
+                        <args>-Xbootclasspath/p:${java.home}/lib</args>
                     </compilerArgs>
                 </configuration>
             </plugin>
