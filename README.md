@@ -18,15 +18,16 @@ chmod +x initialRun.sh
 3. **Maven Clean Install**
 The script will automatically perform a Maven clean install (mvn clean install) to build and configure the necessary components.
 
-4. **Initial Application Run**
-After successful configuration, the script will execute the generated JAR file, allowing you to run the application seamlessly.
+4. **Launching the Application (First Run)**
+The script will automatically execute the application JAR file after successful configuration.
 
-5. **Future Runs**
- - **Navigate to the Target Directory**
+**Subsequent Application Runs**
+   For future usage:
+ 1. **Navigate to the Target Directory**
    ```bash
    cd path/to/target
    ```
-- **Execute the JAR File**
+2. **Execute the JAR File**
   ```bash
   java -jar your-application.jar
   ```
