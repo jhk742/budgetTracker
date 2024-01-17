@@ -46,7 +46,7 @@ The application makes use of the following technologies, libraries, and framewor
 1. **Build and Dependency Management**: Maven
 2. **Database**: MySQL, AWS-RDS
 3. **User Interface**: JSwing
-4. **API Calls**: Apache HTTPClient <a href="https://www.exchangerate-api.com/" target="_blank">ExchangeRate-API</a>
+4. **API Calls**: Apache HTTPClient [ExchangeRate-API](https://www.exchangerate-api.com/)
 5. **JSON Handling**: org.json
 6. **Web Scraping**: jsoup
 7. **Visualiztion**: JFreeChart
@@ -54,6 +54,6 @@ The application makes use of the following technologies, libraries, and framewor
 
 ## Currency Exchange Feature
 
-**Important:** Make sure you acquire an API key from <a href="https://www.exchangerate-api.com/" target="_blank">ExchangeRate-API</a> to enable the currency exchange feature. Follow their instructions to obtain your API key.
+**Important:** Make sure you acquire an API key from [ExchangeRate-API](https://www.exchangerate-api.com/) to enable the currency exchange feature. Follow their instructions to obtain your API key.
 
    
