@@ -15,3 +15,24 @@ However, should you encounter permission issues, you can manually add the permis
 ```bash
 chmod +x initialRun.sh
 ```
+
+## Features
+As of the current release, the application encompasses the following key features:
+1. **User Management**: Empowers administrators to effectively manage and modify account information for application users. This functionality is exclusively accessible to administrator accounts, which are created during the initial configuration process executed by running the provided bash script..
+2. **Category Management**: Enables users to create personalized categories, enhancing the flexibility and precision of transaction categorization within the application.
+3. **Transaction Management**: Empowers users to securely store and organize transactions, seamlessly handling both income and expense entries.
+4. **Account Balance**: Enables users to review their complete transaction history, offering additional filtering options for a more detailed account overview.
+5. **Visualizations**: Incorporates charts to provide users with a graphical representation of their spending and savings, facilitating a clearer understanding of their financial trends.
+6. **Currency Conversion**: Facilitates users in viewing the equivalent amount of one currency in another, aiding in understanding the financial impact and facilitating cross-currency comparisons.
+
+## Technologies Used
+The application makes use of the following technologies, libraries, and frameworks:
+1. **Build and Dependency Management**: Maven
+2. **Database**: MySQL, AWS-RDS
+3. **User Interface**: JSwing
+4. **API Calls**: Apache HTTPClient (https://www.exchangerate-api.com/)https://www.exchangerate-api.com/)
+5. **JSON Handling**: org.json
+6. **Web Scraping**: jsoup
+7. **Visualiztion**: JFreeChart
+8. **Testing**: JUnit, Mockito, PowerMock
+   
