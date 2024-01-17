@@ -15,6 +15,21 @@ However, should you encounter permission issues, you can manually add the permis
 ```bash
 chmod +x initialRun.sh
 ```
+3. **Maven Clean Install**
+The script will automatically perform a Maven clean install (mvn clean install) to build and configure the necessary components.
+
+4. **Initial Application Run**
+After successful configuration, the script will execute the generated JAR file, allowing you to run the application seamlessly.
+
+5. **Future Runs**
+ - **Navigate to the Target Directory**
+   ```bash
+   cd path/to/target
+   ```
+- **Execute the JAR File**
+  ```bash
+  java -jar your-application.jar
+  ```
 
 ## Features
 As of the current release, the application encompasses the following key features:
