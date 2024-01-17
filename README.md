@@ -3,7 +3,7 @@ A budget tracking application created using Java and JSwing with the maven frame
 Makes use of a MySQL database (currently supports on-premise databases...working on providing authorization for people to utilize the AWS-RDS endpoint)
 to help visualize user-specific data.
 
-##Configuration
+## Configuration
 Prior to launching the application, please ensure that you run the provided bash script file, "intialRun.sh", as it will guide you through the configuration process
 of the on-premise database and its associated tables, components of the application that are crucial for its operation.
 1. **Run the Bash Script**
