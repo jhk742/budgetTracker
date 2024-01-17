@@ -1,6 +1,6 @@
 # Budget Tracker Application
 A budget tracking application created using Java and JSwing with the maven framework.
-Makes use of a MySQL database (currently supports on-premise databases...working on providing authorization for people to utilize the AWS-RDS endpoint)
+Makes use of MySQL (currently supports on-premise databases...working on providing authorization for people to utilize the AWS-RDS endpoint)
 to help visualize user-specific data.
 
 ## Configuration
