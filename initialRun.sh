@@ -38,10 +38,10 @@ while true; do
       # Create the database
       echo
       echo "Creating database and associated tables..."
-      $MYSQL_COMMAND -e "CREATE DATABASE IF NOT EXISTS budget_tracker;"
+      $MYSQL_COMMAND -e "CREATE DATABASE IF NOT EXISTS budgettracker;"
 
       # Use the created database and create necessary tables.
-      $MYSQL_COMMAND -e "USE budget_tracker;
+      $MYSQL_COMMAND -e "USE budgettracker;
                         CREATE TABLE user (id INT PRIMARY KEY AUTO_INCREMENT,
                          name varchar(100),
                          email varchar(100),
@@ -88,7 +88,7 @@ while true; do
       read -p "Please provide your initial balance: " USER_INITIAL_BALANCE
       echo
       #Insert user data into the 'user' table
-      $MYSQL_COMMAND -e "USE budget_tracker;
+      $MYSQL_COMMAND -e "USE budgettracker;
                          INSERT INTO user (name, email, phone, address, password, status)
                          values ('$USER_NAME', '$USER_EMAIL', '$USER_PHONE', '$USER_ADDRESS', '$USER_PASSWORD', 1);
 
@@ -109,9 +109,9 @@ while true; do
 done
 
 # Maven Build
-echo "Building the Java application with Maven..."
-mvn clean install
+#echo "Building the Java application with Maven..."
+#mvn clean install
 
 # Run the Java App
-echo "Running the Java application..."
-java -jar target/budgetTracker-1.0-SNAPSHOT.jar
+#echo "Running the Java application..."
+#java -jar target/budgetTracker-1.0-SNAPSHOT.jar
