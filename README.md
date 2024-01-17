@@ -51,4 +51,9 @@ The application makes use of the following technologies, libraries, and framewor
 6. **Web Scraping**: jsoup
 7. **Visualiztion**: JFreeChart
 8. **Testing**: JUnit, Mockito, PowerMock
+
+## Currency Exchange Feature
+
+**Important:** Make sure you acquire an API key from [ExchangeRate-API](https://www.exchangerate-api.com/) to enable the currency exchange feature. Follow their instructions to obtain your API key.
+
    
