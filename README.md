@@ -21,7 +21,7 @@ The script will automatically perform a Maven clean install (mvn clean install) 
 4. **Launching the Application (First Run)**
 The script will automatically execute the application JAR file after successful configuration.
 
-**Subsequent Application Runs**
+#### Subsequent Application Runs  
    For future usage:
  1. **Navigate to the Target Directory**
    ```bash
