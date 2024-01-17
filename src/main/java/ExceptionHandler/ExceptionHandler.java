@@ -1,7 +1,5 @@
 package ExceptionHandler;
 
-import jdk.nashorn.internal.scripts.JO;
-
 import javax.swing.*;
 import java.io.IOException;
 import java.sql.SQLException;
