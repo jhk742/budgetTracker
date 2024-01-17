@@ -10,8 +10,8 @@ of the on-premise database and its associated tables, components of the applicat
    - Navigate to the root directory of the cloned repository.
    - Execute the provided bash script file, "initialRun.sh".
 2. **Permission Issues**
-All prospective users of the application should be able to run the bash script file upon cloning the repository onto their own local machines,
-but should you encounter permission issues, you can manually add execute permission to the script with the following command:
+All prospective users of the application should be able to run the bash script file upon cloning the repository onto their own local machines.
+However, should you encounter permission issues, you can manually add the permission to execute the script with the following command:
 ```bash
 chmod +x initialRun.sh
 ```
